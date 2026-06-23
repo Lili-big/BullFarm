@@ -7,7 +7,10 @@
 - `agent.yaml`：Agent 项目配置和处理流程。
 - `config/scoring_rules.json`：评分阈值、流动性门槛和风险参数。
 - `data/sample_candidates.csv`：虚构样例数据，用来验证流程。
+- `data/snapshots/`：真实行情快照输出目录，运行抓取脚本后自动生成。
+- `requirements.txt`：真实数据抓取所需的 Python 依赖。
 - `skills/stock-selection-agent/SKILL.md`：可复用的 Codex Skill 能力说明。
+- `skills/stock-selection-agent/scripts/fetch_live_candidates.py`：AKShare 真实数据快照生成脚本。
 - `skills/stock-selection-agent/scripts/score_candidates.py`：评分脚本。
 - `skills/stock-selection-agent/references/scoring-model.md`：完整评分规则。
 - `outputs/`：生成报告的位置。
@@ -29,6 +32,55 @@ python .\skills\stock-selection-agent\scripts\score_candidates.py `
 - `outputs/selection_report.md`：可读的选股报告。
 - `outputs/selection_scores.csv`：结构化评分结果。
 
+## 真实数据快照
+
+第一版真实数据接入使用 AKShare。先安装依赖：
+
+```powershell
+python -m pip install -r .\requirements.txt
+```
+
+收盘后或盘中都可以生成快照，盘中快照会在元数据中标记为 `intraday`：
+
+```powershell
+python .\skills\stock-selection-agent\scripts\fetch_live_candidates.py `
+  --source akshare `
+  --mode prefilter `
+  --eastmoney-route auto `
+  --top 100 `
+  --max-history 500 `
+  --workers 1 `
+  --output-dir .\data\snapshots
+```
+
+脚本会生成：
+
+- `data/snapshots/YYYYMMDD_candidates.csv`：兼容评分器的真实候选股快照。
+- `data/snapshots/YYYYMMDD_fetch_meta.json`：抓取统计、接口异常、跳过原因和市场环境元数据。
+
+如果同一天的快照已经存在，脚本默认生成 `YYYYMMDD_HHMMSS_candidates.csv`；传入 `--overwrite` 会覆盖当天快照。
+
+当前环境下 AKShare 历史接口单线程更稳定；如果网络质量较好，可以把 `--workers` 调到 2-6 加速历史数据扫描。
+
+脚本不会修改 Windows、本机代理或当前终端的 `HTTP_PROXY` / `HTTPS_PROXY` / `ALL_PROXY`。东方财富 `push2.eastmoney.com` 实时行情和行业接口默认使用脚本内部的独立 direct session，并只在这个 session 上禁用环境代理；这不会影响 Codex 或其他程序的代理设置。
+
+`--eastmoney-route` 可选值：
+
+- `auto`：默认值，优先使用项目内 direct session，失败后降级到 AKShare/Sina 路径。
+- `direct`：只使用项目内 direct session 获取东方财富实时行情；行情入口失败时退出。
+- `akshare`：使用 AKShare 自带东方财富接口，便于对照调试代理行为。
+- `off`：跳过东方财富实时/行业接口，只走现有 fallback。
+
+生成快照后，用真实数据执行评分：
+
+```powershell
+python .\skills\stock-selection-agent\scripts\score_candidates.py `
+  --input .\data\snapshots\YYYYMMDD_candidates.csv `
+  --config .\config\scoring_rules.json `
+  --output .\outputs\selection_report.md `
+  --csv-output .\outputs\selection_scores.csv
+```
+
 ## 输入字段
 
 最重要的字段包括：
@@ -49,3 +101,41 @@ python .\skills\stock-selection-agent\scripts\score_candidates.py `
 - `回避`：50 分以下、趋势不合格、下降趋势反抽、ST、流动性不足或高位强转弱。
 
 风险提示：这个工具只做规则化筛选，不构成投资建议；真实使用前需要接入实时行情、公告、流动性和个人风控。
+
+## 选股结果验证闭环
+
+评分完成后，可以把每一次选股结果写入统一 Excel 总表，并在后续交易日补充 T0/T1/T2/T3/T5/T10 行情，复盘这批结果是否盈利。
+
+默认总表位置：`data/validation/output/stock_selection_log.xlsx`。脚本每次写入前会把旧总表备份到 `data/validation/output/backup/`。
+
+```powershell
+python .\skills\stock-selection-agent\scripts\validate_selection_results.py snapshot `
+  --scores .\outputs\selection_scores.csv `
+  --candidates .\data\snapshots\YYYYMMDD_candidates.csv `
+  --market-env 震荡
+
+python .\skills\stock-selection-agent\scripts\validate_selection_results.py update-prices `
+  --run-id 20260623_153000_v1_0 `
+  --offsets 0,1,2,3,5,10
+
+python .\skills\stock-selection-agent\scripts\validate_selection_results.py analyze `
+  --run-id 20260623_153000_v1_0
+
+python .\skills\stock-selection-agent\scripts\validate_selection_results.py compare `
+  --group-by participation_level
+
+python .\skills\stock-selection-agent\scripts\validate_selection_results.py report `
+  --run-id 20260623_153000_v1_0
+```
+
+验证逻辑使用选股快照里的 `close` 作为默认 `selection_price`，再按真实交易日补充后续收盘价。收益按 `(future_price - selection_price) / selection_price * 100` 计算；停牌、缺价、未来价格不足会写入状态，不会中断复盘流程。
+
+离线调试补价时，可以传入本地 CSV 或 Excel 行情文件：
+
+```powershell
+python .\skills\stock-selection-agent\scripts\validate_selection_results.py update-prices `
+  --run-id 20260623_153000_v1_0 `
+  --price-file .\data\validation\input\prices\prices.csv
+```
+
+本地价格文件字段至少包含：`trade_date`、`stock_code`、`open`、`high`、`low`、`close`、`volume`、`amount`、`turnover_rate`。

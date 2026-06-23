@@ -1,0 +1,23 @@
+{
+  "validation": {
+    "output_excel": "data/validation/output/stock_selection_log.xlsx",
+    "report_dir": "data/validation/output/reports",
+    "backup_dir": "data/validation/output/backup",
+    "default_offsets": [0, 1, 2, 3, 5, 10],
+    "default_mode": "selection_price",
+    "holding_days": 3,
+    "stop_loss_pct": -3.0,
+    "take_profit_pct": 5.0,
+    "auto_backup_excel": true,
+    "allow_force_overwrite": false
+  },
+  "excel": {
+    "freeze_header": true,
+    "auto_adjust_column_width": true,
+    "highlight_positive_return": true,
+    "highlight_negative_return": true,
+    "highlight_failed_result": true,
+    "date_format": "yyyy-mm-dd",
+    "percent_decimal_places": 2
+  }
+}
