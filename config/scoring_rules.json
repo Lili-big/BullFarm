@@ -1,0 +1,23 @@
+{
+  "liquidity": {
+    "min_avg_amount_20d_billion": 3.0
+  },
+  "risk": {
+    "max_recent5_gain_pct": 30.0,
+    "caution_recent5_gain_pct": 25.0,
+    "max_upper_shadow_ratio": 0.05
+  },
+  "sector": {
+    "top_rank_percentile": 30.0,
+    "min_leaders_count": 2
+  },
+  "thresholds": {
+    "strong": 80,
+    "trial": 65,
+    "watch": 50,
+    "min_trend": 25,
+    "min_startup": 15,
+    "min_sector": 15,
+    "min_market_for_attack": 5
+  }
+}

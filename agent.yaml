@@ -1,0 +1,26 @@
+name: stock-selection-agent
+version: 0.1.0
+language: zh-CN
+purpose: >
+  Rank candidate A-share stocks for 2-3 day continuation probability using
+  medium-term trend, recent 5-day startup, sector strength, and market
+  environment filters.
+primary_skill: skills/stock-selection-agent
+pipeline:
+  - build_trend_pool
+  - build_startup_pool
+  - build_sector_resonance_pool
+  - apply_market_position_filter
+  - output_buy_sell_plan
+inputs:
+  candidate_csv: data/sample_candidates.csv
+  scoring_config: config/scoring_rules.json
+outputs:
+  markdown_report: outputs/selection_report.md
+  scored_csv: outputs/selection_scores.csv
+guardrails:
+  - Do not treat single-day limit-up as sufficient.
+  - Reject downtrend rebounds and liquidity failures.
+  - Cap position when market score is below 5.
+  - Always include stop-loss conditions before any participation suggestion.
+disclaimer: Rule-based screening only; not investment advice.

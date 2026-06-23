@@ -1,0 +1,7 @@
+interface:
+  display_name: "Stock Selection Agent"
+  short_description: "按中期趋势、近五日启动、板块强度和大盘环境筛选候选股"
+  default_prompt: "Use $stock-selection-agent to score candidate stocks from K-line, sector, and market context."
+
+policy:
+  allow_implicit_invocation: true
