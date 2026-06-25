@@ -1,0 +1,11 @@
+{
+  "base_file": "outputs\\selection_success_20260623_t2.csv",
+  "target_t2_date": "2026-06-25",
+  "quote_file": "data\\validation\\input\\prices\\20260623_t2_tencent_intraday_quote.csv",
+  "stock_count": 50,
+  "source_counts": {
+    "daily_k_close": 50
+  },
+  "valid_t2_count": 50,
+  "note": "T2 uses Tencent qfq daily k close when available; otherwise Tencent current quote if quote_date is 20260625. Intraday quote is temporary and not final T2 close."
+}

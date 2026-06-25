@@ -1,0 +1,65 @@
+{
+  "generated_at": "2026-06-23T21:46:03",
+  "end_date": "20260623",
+  "source": "tencent_quote_code_ranges_and_tencent_qfq_kline",
+  "quote_symbol_count": 14999,
+  "quoted_count": 5544,
+  "liquid_prefilter_count": 120,
+  "written_rows": 50,
+  "top_scan": 120,
+  "top_rows": 50,
+  "min_amount_cny": 3000000000,
+  "market": {
+    "index_pct3": -0.04454635742244806,
+    "index_above_ma5_ma10": false,
+    "amount_expanding": true,
+    "limit_up_premium_good": false,
+    "limit_down_risk_low": false,
+    "limit_up_count": 129,
+    "limit_down_count": 75,
+    "large_drop_ratio": 0.03336940836940837
+  },
+  "skipped_sample": [
+    {
+      "symbol": "601899",
+      "name": "紫金矿业",
+      "reason": "history_60d_pct_negative:-13.82"
+    },
+    {
+      "symbol": "300274",
+      "name": "阳光电源",
+      "reason": "history_60d_pct_negative:-7.31"
+    },
+    {
+      "symbol": "600519",
+      "name": "贵州茅台",
+      "reason": "history_60d_pct_negative:-13.14"
+    },
+    {
+      "symbol": "300014",
+      "name": "亿纬锂能",
+      "reason": "history_60d_pct_negative:-3.70"
+    },
+    {
+      "symbol": "601318",
+      "name": "中国平安",
+      "reason": "history_60d_pct_negative:-10.59"
+    },
+    {
+      "symbol": "603799",
+      "name": "华友钴业",
+      "reason": "history_60d_pct_negative:-8.65"
+    },
+    {
+      "symbol": "600276",
+      "name": "恒瑞医药",
+      "reason": "history_60d_pct_negative:-8.35"
+    },
+    {
+      "symbol": "688820",
+      "name": "盛合晶微",
+      "reason": "history_rows_lt_65:42"
+    }
+  ],
+  "note": "Stock universe is generated from common SH/SZ A-share code ranges; sector is board-level, not industry-level, because official industry pagination was too slow in this run."
+}

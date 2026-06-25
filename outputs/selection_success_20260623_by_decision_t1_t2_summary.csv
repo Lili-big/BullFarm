@@ -1,0 +1,4 @@
+﻿decision,sample_count,t1_valid_count,t1_success_count,t1_success_rate_pct,t1_avg_return_pct,t1_median_return_pct,t1_max_return_pct,t1_min_return_pct,t2_valid_count,t2_success_count,t2_success_rate_pct,t2_avg_return_pct,t2_median_return_pct,t2_max_return_pct,t2_min_return_pct
+轻仓试错,6,6,5,83.3333,2.3654,1.5543,9.9849,-2.8093,6,6,100.0,4.731,4.3887,9.9627,0.5033
+只观察,37,37,28,75.6757,3.6311,3.2907,10.9918,-3.6889,37,34,91.8919,9.0547,9.277,22.4741,-7.5423
+回避,7,7,6,85.7143,2.1123,1.5464,8.2036,-3.445,7,7,100.0,5.4677,7.0069,8.5041,1.0526

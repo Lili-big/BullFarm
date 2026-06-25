@@ -1,0 +1,71 @@
+{
+  "generated_at": "2026-06-25T14:43:31",
+  "end_date": "20260625",
+  "source": "tencent_quote_code_ranges_and_tencent_qfq_kline",
+  "snapshot_session": "intraday",
+  "quote_symbol_count": 15000,
+  "quoted_count": 5190,
+  "liquid_prefilter_count": 225,
+  "written_rows": 50,
+  "top_scan": 120,
+  "top_rows": 50,
+  "min_amount_cny": 3000000000,
+  "history_days": 150,
+  "market": {
+    "index_pct": 0.06,
+    "index_pct3": -1.183012658835958,
+    "index_above_ma5_ma10": false,
+    "amount_expanding": true,
+    "total_amount_cny": 3332571136912.0,
+    "limit_up_premium_good": false,
+    "limit_down_risk_low": false,
+    "limit_up_count": 120,
+    "limit_down_count": 44,
+    "large_drop_ratio": 0.08554913294797688
+  },
+  "api_errors_sample": [],
+  "skipped_sample": [
+    {
+      "symbol": "601899",
+      "name": "紫金矿业",
+      "reason": "history_60d_pct_negative:-16.82"
+    },
+    {
+      "symbol": "688797",
+      "name": "C臻宝",
+      "reason": "history_rows_lt_65:2"
+    },
+    {
+      "symbol": "300274",
+      "name": "阳光电源",
+      "reason": "history_60d_pct_negative:-6.97"
+    },
+    {
+      "symbol": "688820",
+      "name": "盛合晶微",
+      "reason": "history_rows_lt_65:44"
+    },
+    {
+      "symbol": "601318",
+      "name": "中国平安",
+      "reason": "history_60d_pct_negative:-13.88"
+    },
+    {
+      "symbol": "600519",
+      "name": "贵州茅台",
+      "reason": "history_60d_pct_negative:-14.37"
+    },
+    {
+      "symbol": "300085",
+      "name": "银之杰",
+      "reason": "history_60d_pct_negative:-13.82"
+    },
+    {
+      "symbol": "600276",
+      "name": "恒瑞医药",
+      "reason": "history_60d_pct_negative:-6.77"
+    }
+  ],
+  "elapsed_seconds": 195.41,
+  "note": "Stock universe is generated from common SH/SZ A-share code ranges. This rerun overwrites the existing 20260625 outputs. Sector is board-level approximation because official industry pagination was too slow. Amount in daily history is estimated as volume_hands * close * 100 from Tencent kline fields."
+}
