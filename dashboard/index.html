@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>选股 Dashboard</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #20242a;
+      --muted: #667085;
+      --line: #d8dee8;
+      --blue: #2563eb;
+      --green: #15803d;
+      --red: #b42318;
+      --amber: #b45309;
+      --teal: #0f766e;
+      --chip: #eef2f7;
+      --shadow: 0 10px 28px rgba(25, 31, 40, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .shell {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 750;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      color: var(--muted);
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    label {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    select,
+    input {
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      padding: 7px 10px;
+      outline: none;
+    }
+
+    select:focus,
+    input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .status {
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      padding: 7px 10px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--teal);
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .metrics {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      min-height: 92px;
+      box-shadow: var(--shadow);
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 24px;
+      line-height: 1.1;
+    }
+
+    .metric small {
+      display: block;
+      margin-top: 7px;
+      color: var(--muted);
+    }
+
+    .review-empty,
+    .filters,
+    .table-wrap {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .review-empty {
+      display: none;
+      margin-top: 14px;
+      padding: 16px;
+      border-left: 4px solid var(--amber);
+    }
+
+    .review-empty.is-visible {
+      display: block;
+    }
+
+    .review-empty strong {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--amber);
+    }
+
+    .review-empty p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .filters {
+      margin-top: 14px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: minmax(180px, 1.4fr) repeat(4, minmax(120px, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+
+    .results-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin: 18px 0 10px;
+      color: var(--muted);
+    }
+
+    .table-wrap {
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th,
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      color: var(--muted);
+      background: #f9fafb;
+      font-weight: 650;
+      font-size: 12px;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .rank {
+      width: 56px;
+      color: var(--muted);
+    }
+
+    .score-col {
+      width: 150px;
+    }
+
+    .decision-col {
+      width: 130px;
+    }
+
+    .review-col {
+      width: 150px;
+    }
+
+    .name {
+      font-weight: 700;
+    }
+
+    .code {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--chip);
+      color: #344054;
+      font-size: 12px;
+      max-width: 100%;
+    }
+
+    .chip.green {
+      background: #dcfce7;
+      color: var(--green);
+    }
+
+    .chip.amber {
+      background: #fef3c7;
+      color: var(--amber);
+    }
+
+    .chip.red {
+      background: #fee2e2;
+      color: var(--red);
+    }
+
+    .score {
+      display: grid;
+      gap: 6px;
+    }
+
+    .score-line {
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e5e7eb;
+    }
+
+    .score-line span {
+      display: block;
+      height: 100%;
+      width: var(--score-width, 0%);
+      background: linear-gradient(90deg, var(--teal), var(--blue));
+    }
+
+    details {
+      margin-top: 9px;
+    }
+
+    summary {
+      cursor: pointer;
+      color: var(--blue);
+      font-size: 12px;
+      list-style-position: inside;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+      color: var(--muted);
+    }
+
+    .detail-grid div {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fbfcfe;
+      min-height: 76px;
+    }
+
+    .detail-grid strong {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .empty {
+      padding: 32px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    @media (max-width: 980px) {
+      header {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        justify-content: flex-start;
+      }
+
+      .metrics {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .shell {
+        padding: 16px;
+      }
+
+      .metrics,
+      .filters,
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+
+      table,
+      tbody,
+      tr,
+      td {
+        display: block;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tr {
+        border-bottom: 1px solid var(--line);
+      }
+
+      td {
+        border-bottom: 0;
+        padding: 10px 14px;
+      }
+
+      .rank,
+      .score-col,
+      .decision-col,
+      .review-col {
+        width: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <h1>选股 Dashboard</h1>
+        <div class="subtitle" id="runMeta">加载中</div>
+      </div>
+      <div class="toolbar">
+        <label>
+          日期
+          <select id="dateSelect"></select>
+        </label>
+        <div class="status"><span class="dot"></span><span id="sourceStatus">读取数据</span></div>
+      </div>
+    </header>
+
+    <section class="grid metrics" id="metrics"></section>
+
+    <section class="review-empty" id="reviewEmpty">
+      <strong id="reviewEmptyTitle"></strong>
+      <p id="reviewEmptyMessage"></p>
+    </section>
+
+    <section class="filters">
+      <label>
+        搜索
+        <input id="searchInput" type="search" placeholder="代码 / 名称 / 板块">
+      </label>
+      <label>
+        结论
+        <select id="decisionFilter"></select>
+      </label>
+      <label>
+        板块
+        <select id="sectorFilter"></select>
+      </label>
+      <label>
+        买点
+        <select id="modelFilter"></select>
+      </label>
+      <label>
+        最低分
+        <input id="minScore" type="number" min="0" max="100" step="1" placeholder="0">
+      </label>
+    </section>
+
+    <div class="results-head">
+      <strong id="resultCount">0 条</strong>
+      <span id="generatedAt"></span>
+    </div>
+
+    <section class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="rank">排名</th>
+            <th>标的</th>
+            <th>板块</th>
+            <th class="score-col">评分</th>
+            <th class="decision-col">结论</th>
+            <th class="review-col">复盘</th>
+          </tr>
+        </thead>
+        <tbody id="pickRows"></tbody>
+      </table>
+      <div class="empty" id="emptyRows" hidden>没有匹配结果</div>
+    </section>
+  </main>
+
+  <script src="./supabase-config.js"></script>
+  <script>
+    window.STOCK_DASHBOARD_CONFIG = window.STOCK_DASHBOARD_CONFIG || {
+      supabaseUrl: "",
+      supabaseAnonKey: "",
+      runsIndexView: "dashboard_runs_index",
+      runDetailView: "dashboard_runs",
+      localIndexUrl: "../data/dashboard/runs_index.json",
+      localRunsBaseUrl: "../data/dashboard/runs/"
+    };
+
+    const STORAGE_KEY = "stockDashboardSupabase";
+    const state = {
+      config: readConfig(),
+      index: null,
+      detail: null,
+      source: "本地 JSON"
+    };
+
+    const els = {
+      dateSelect: document.getElementById("dateSelect"),
+      sourceStatus: document.getElementById("sourceStatus"),
+      runMeta: document.getElementById("runMeta"),
+      metrics: document.getElementById("metrics"),
+      reviewEmpty: document.getElementById("reviewEmpty"),
+      reviewEmptyTitle: document.getElementById("reviewEmptyTitle"),
+      reviewEmptyMessage: document.getElementById("reviewEmptyMessage"),
+      searchInput: document.getElementById("searchInput"),
+      decisionFilter: document.getElementById("decisionFilter"),
+      sectorFilter: document.getElementById("sectorFilter"),
+      modelFilter: document.getElementById("modelFilter"),
+      minScore: document.getElementById("minScore"),
+      resultCount: document.getElementById("resultCount"),
+      generatedAt: document.getElementById("generatedAt"),
+      pickRows: document.getElementById("pickRows"),
+      emptyRows: document.getElementById("emptyRows")
+    };
+
+    function readConfig() {
+      let stored = {};
+      try {
+        stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      } catch (error) {
+        stored = {};
+      }
+      return { ...window.STOCK_DASHBOARD_CONFIG, ...stored };
+    }
+
+    function hasSupabaseConfig() {
+      return Boolean(state.config.supabaseUrl && state.config.supabaseAnonKey);
+    }
+
+    async function fetchJson(url) {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`);
+      }
+      return response.json();
+    }
+
+    async function fetchSupabaseRows(view, query) {
+      const baseUrl = state.config.supabaseUrl.replace(/\/$/, "");
+      const response = await fetch(`${baseUrl}/rest/v1/${view}?${query}`, {
+        headers: {
+          apikey: state.config.supabaseAnonKey,
+          Authorization: `Bearer ${state.config.supabaseAnonKey}`,
+          Accept: "application/json"
+        },
+        cache: "no-store"
+      });
+      if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`);
+      }
+      return response.json();
+    }
+
+    function dateKey(value) {
+      const text = String(value || "");
+      const match = text.match(/(20\d{2})[-_/]?(\d{2})[-_/]?(\d{2})/);
+      return match ? `${match[1]}${match[2]}${match[3]}` : text;
+    }
+
+    function normalizeIndexPayload(payload) {
+      if (Array.isArray(payload)) {
+        if (payload.length && payload[0].payload) {
+          return normalizeIndexPayload(payload[0].payload);
+        }
+        const runs = payload.map((row) => ({
+          date: dateKey(row.date || row.date_key || row.selection_date),
+          selection_date: row.selection_date || row.date || row.date_key,
+          run_id: row.run_id || "",
+          label: row.label || row.market_env || row.run_id || "",
+          market_env: row.market_env || "",
+          total_selected_count: Number(row.total_selected_count || row.selected_count || 0),
+          top_score: row.top_score ?? null,
+          average_score: row.average_score ?? null,
+          score_buckets: row.score_buckets || {},
+          has_review: Boolean(row.has_review),
+          review_status: row.review_status || "missing_review",
+          run_count: Number(row.run_count || 1),
+          json_path: row.json_path || `runs/${dateKey(row.date || row.date_key || row.selection_date)}.json`
+        })).filter((row) => row.date);
+        runs.sort((a, b) => b.date.localeCompare(a.date));
+        return { schema_version: 1, latest_date: runs[0]?.date || "", runs };
+      }
+      return payload;
+    }
+
+    function normalizeDetailPayload(payload) {
+      if (Array.isArray(payload)) {
+        if (!payload.length) {
+          throw new Error("empty detail view");
+        }
+        return normalizeDetailPayload(payload[0].payload || payload[0]);
+      }
+      return payload;
+    }
+
+    async function loadIndex() {
+      if (hasSupabaseConfig()) {
+        try {
+          const rows = await fetchSupabaseRows(state.config.runsIndexView, "select=*");
+          state.source = "Supabase";
+          return normalizeIndexPayload(rows);
+        } catch (error) {
+          console.warn("Supabase index failed, falling back to local JSON.", error);
+        }
+      }
+      state.source = "本地 JSON";
+      return normalizeIndexPayload(await fetchJson(state.config.localIndexUrl));
+    }
+
+    async function loadDetail(runDate) {
+      if (hasSupabaseConfig()) {
+        try {
+          const rows = await fetchSupabaseRows(
+            state.config.runDetailView,
+            `select=*&date=eq.${encodeURIComponent(runDate)}&limit=1`
+          );
+          state.source = "Supabase";
+          return normalizeDetailPayload(rows);
+        } catch (error) {
+          console.warn("Supabase detail failed, falling back to local JSON.", error);
+        }
+      }
+      state.source = "本地 JSON";
+      return normalizeDetailPayload(await fetchJson(`${state.config.localRunsBaseUrl}${runDate}.json`));
+    }
+
+    function optionList(select, options, placeholder) {
+      select.innerHTML = "";
+      select.append(new Option(placeholder, ""));
+      options.forEach((item) => {
+        const label = item.count == null ? item.value : `${item.value} (${item.count})`;
+        select.append(new Option(label, item.value));
+      });
+    }
+
+    function formatValue(value) {
+      if (value === null || value === undefined || value === "") {
+        return "-";
+      }
+      return String(value);
+    }
+
+    function formatPct(value) {
+      if (value === null || value === undefined || value === "") {
+        return "-";
+      }
+      const number = Number(value);
+      if (!Number.isFinite(number)) {
+        return "-";
+      }
+      return `${number.toFixed(2)}%`;
+    }
+
+    function metricCard(label, value, hint) {
+      return `<article class="metric"><span>${label}</span><strong>${value}</strong><small>${hint || ""}</small></article>`;
+    }
+
+    function reviewLabel(status) {
+      const map = {
+        ready: "复盘完成",
+        partial_review: "部分复盘",
+        insufficient_data: "数据不足",
+        missing_review: "暂无复盘",
+        reviewed: "已复盘"
+      };
+      return map[status] || status || "-";
+    }
+
+    function renderMetrics(detail) {
+      const metrics = detail.metrics || {};
+      const review = metrics.review || {};
+      const effectiveness = detail.strategy_effectiveness || {};
+      els.metrics.innerHTML = [
+        metricCard("标的数", formatValue(metrics.selected_count), `${formatValue(metrics.sector_count)} 个板块`),
+        metricCard("最高分", formatValue(metrics.top_score), `平均 ${formatValue(metrics.average_score)}`),
+        metricCard("强参与", formatValue(metrics.score_buckets?.strong || 0), "80 分及以上"),
+        metricCard("轻仓试错", formatValue(metrics.score_buckets?.trial || 0), "65-79 分"),
+        metricCard("T3 胜率", formatPct(review.win_rate_t3), review.valid_stock_count ? `${review.valid_stock_count} 条有效` : reviewLabel(metrics.review_status)),
+        metricCard("T3 均收", formatPct(review.avg_return_t3_pct), review.conclusion || reviewLabel(metrics.review_status)),
+        metricCard("策略样本", formatValue(effectiveness.reviewed_run_count || 0), `${formatValue(effectiveness.valid_stock_count || 0)} 条复盘`),
+        metricCard("策略结论", formatValue(effectiveness.conclusion), `T3 ${formatPct(effectiveness.avg_return_t3_pct)} · 最新 ${formatPct(effectiveness.avg_return_latest_pct)}`)
+      ].join("");
+    }
+
+    function renderReviewEmpty(detail) {
+      const empty = detail.review?.empty_state;
+      els.reviewEmpty.classList.toggle("is-visible", Boolean(empty));
+      els.reviewEmptyTitle.textContent = empty?.title || "";
+      els.reviewEmptyMessage.textContent = empty?.message || "";
+    }
+
+    function renderFilters(detail) {
+      optionList(els.decisionFilter, detail.filters?.decisions || [], "全部结论");
+      optionList(els.sectorFilter, detail.filters?.sectors || [], "全部板块");
+      optionList(els.modelFilter, detail.filters?.buy_models || [], "全部买点");
+    }
+
+    function chipClass(value) {
+      if (["强参与", "ready", "reviewed", "成功"].includes(value)) {
+        return "green";
+      }
+      if (["回避", "失败"].includes(value)) {
+        return "red";
+      }
+      if (["轻仓试错", "只观察", "partial_review", "insufficient_data", "missing_review", "数据不足"].includes(value)) {
+        return "amber";
+      }
+      return "";
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function scoreWidth(score) {
+      const number = Number(score);
+      if (!Number.isFinite(number)) {
+        return 0;
+      }
+      return Math.max(0, Math.min(100, number));
+    }
+
+    function renderRows(picks) {
+      els.resultCount.textContent = `${picks.length} 条`;
+      els.emptyRows.hidden = picks.length > 0;
+      els.pickRows.innerHTML = picks.map((pick) => {
+        const review = pick.review || {};
+        const decision = pick.decision || "-";
+        const reviewStatus = review.status || "missing_review";
+        return `
+          <tr>
+            <td class="rank">#${escapeHtml(pick.rank || "")}</td>
+            <td>
+              <div class="name">${escapeHtml(pick.name || "-")}</div>
+              <div class="code">${escapeHtml(pick.stock_code || pick.symbol || "")}</div>
+              <details>
+                <summary>详情</summary>
+                <div class="detail-grid">
+                  <div><strong>买点</strong>${escapeHtml(pick.buy_model || "-")}<br>${escapeHtml(pick.continuation || "")}</div>
+                  <div><strong>计划</strong>${escapeHtml(pick.plan || "-")}</div>
+                  <div><strong>理由</strong>${escapeHtml(pick.notes || "-")}</div>
+                  <div><strong>风险</strong>${escapeHtml(pick.risks || pick.hard_rejects || "-")}</div>
+                  <div><strong>价格</strong>入选 ${formatValue(pick.selection_price)} / 止损 ${formatValue(pick.stop_loss_price)} / 止盈 ${formatValue(pick.take_profit_price)}</div>
+                  <div><strong>复盘</strong>${escapeHtml(review.result_label || reviewLabel(reviewStatus))}<br>T1 ${formatPct(review.returns?.return_t1_close_pct)} / T2 ${formatPct(review.returns?.return_t2_close_pct)} / T3 ${formatPct(review.returns?.return_t3_close_pct)}</div>
+                </div>
+              </details>
+            </td>
+            <td><span class="chip">${escapeHtml(pick.sector || "未填写")}</span></td>
+            <td class="score-col">
+              <div class="score">
+                <strong>${formatValue(pick.total_score)}</strong>
+                <div class="score-line"><span style="--score-width:${scoreWidth(pick.total_score)}%"></span></div>
+              </div>
+            </td>
+            <td class="decision-col"><span class="chip ${chipClass(decision)}">${escapeHtml(decision)}</span></td>
+            <td class="review-col"><span class="chip ${chipClass(reviewStatus)}">${escapeHtml(reviewLabel(reviewStatus))}</span></td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function filteredPicks() {
+      const detail = state.detail || {};
+      const query = els.searchInput.value.trim().toLowerCase();
+      const decision = els.decisionFilter.value;
+      const sector = els.sectorFilter.value;
+      const model = els.modelFilter.value;
+      const minScore = Number(els.minScore.value || 0);
+      return (detail.picks || []).filter((pick) => {
+        const haystack = [pick.symbol, pick.stock_code, pick.name, pick.sector, pick.buy_model].join(" ").toLowerCase();
+        const score = Number(pick.total_score || 0);
+        return (!query || haystack.includes(query))
+          && (!decision || pick.decision === decision)
+          && (!sector || pick.sector === sector)
+          && (!model || pick.buy_model === model)
+          && (!minScore || score >= minScore);
+      });
+    }
+
+    function applyFilters() {
+      renderRows(filteredPicks());
+    }
+
+    function renderDetail(detail) {
+      state.detail = detail;
+      const run = detail.run || {};
+      els.sourceStatus.textContent = state.source;
+      els.runMeta.textContent = `${run.run_id || ""} · ${run.market_env || run.strategy_version || ""}`;
+      els.generatedAt.textContent = detail.generated_at ? `生成于 ${detail.generated_at}` : "";
+      renderMetrics(detail);
+      renderReviewEmpty(detail);
+      renderFilters(detail);
+      applyFilters();
+    }
+
+    function renderDateOptions(index) {
+      els.dateSelect.innerHTML = "";
+      (index.runs || []).forEach((run) => {
+        const label = `${run.selection_date || run.date} · ${run.market_env || reviewLabel(run.review_status)}`;
+        els.dateSelect.append(new Option(label, run.date));
+      });
+      els.dateSelect.value = index.latest_date || index.runs?.[0]?.date || "";
+    }
+
+    async function loadDate(runDate) {
+      els.sourceStatus.textContent = "读取数据";
+      const detail = await loadDetail(runDate);
+      renderDetail(detail);
+    }
+
+    async function boot() {
+      try {
+        state.index = await loadIndex();
+        renderDateOptions(state.index);
+        if (!els.dateSelect.value) {
+          throw new Error("no runs");
+        }
+        await loadDate(els.dateSelect.value);
+      } catch (error) {
+        els.sourceStatus.textContent = "读取失败";
+        els.runMeta.textContent = error.message;
+        els.metrics.innerHTML = "";
+        els.pickRows.innerHTML = "";
+        els.emptyRows.hidden = false;
+        els.emptyRows.textContent = "没有可用数据";
+      }
+    }
+
+    els.dateSelect.addEventListener("change", () => loadDate(els.dateSelect.value));
+    [els.searchInput, els.decisionFilter, els.sectorFilter, els.modelFilter, els.minScore].forEach((el) => {
+      el.addEventListener("input", applyFilters);
+      el.addEventListener("change", applyFilters);
+    });
+
+    boot();
+  </script>
+</body>
+</html>

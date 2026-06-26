@@ -73,6 +73,23 @@ EASTMONEY_CONS_FIELDS = (
     "f23,f25,f22,f11,f62,f128,f136,f115,f152,f45"
 )
 
+TENCENT_QUOTE_URL = "https://qt.gtimg.cn/q={symbols}"
+TENCENT_QFQ_KLINE_URL = "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get"
+TENCENT_BATCH_SIZE = 800
+TENCENT_COMMON_CODE_RANGES = (
+    ("sz", 1, 3999),
+    ("sz", 300000, 301999),
+    ("sh", 600000, 605999),
+    ("sh", 688000, 689999),
+)
+TENCENT_BJ_CODE_RANGES = (
+    ("bj", 430000, 439999),
+    ("bj", 830000, 839999),
+    ("bj", 870000, 879999),
+    ("bj", 920000, 929999),
+)
+TENCENT_CODE_RANGES = TENCENT_COMMON_CODE_RANGES
+
 
 @dataclass
 class FetchMeta:
@@ -294,11 +311,236 @@ def import_akshare() -> Any:
         ) from exc
 
 
+class TencentClientError(RuntimeError):
+    pass
+
+
+class TencentClient:
+    def __init__(
+        self,
+        batch_size: int = TENCENT_BATCH_SIZE,
+        retries: int = 3,
+        timeout: int = 20,
+        session: requests.Session | None = None,
+    ) -> None:
+        self.batch_size = batch_size
+        self.retries = retries
+        self.timeout = timeout
+        self.session = session or requests.Session()
+        self.session.trust_env = False
+        self.session.headers.update(
+            {
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/126.0.0.0 Safari/537.36"
+                ),
+                "Accept": "application/json,text/javascript,*/*",
+                "Referer": "https://gu.qq.com/",
+                "Connection": "close",
+            }
+        )
+        self.stats: dict[str, Any] = {
+            "tencent_route": "direct_session",
+            "trust_env": self.session.trust_env,
+            "headers": "browser_like",
+            "batch_size": batch_size,
+            "retries": retries,
+            "timeout": timeout,
+            "quote_batches": 0,
+            "quote_rows": 0,
+            "history_requests": 0,
+            "history_ok": 0,
+            "history_failed": 0,
+        }
+
+    def fetch_a_spot(self, include_bj: bool = False) -> pd.DataFrame:
+        started = time.monotonic()
+        symbols = iter_tencent_quote_symbols(include_bj=include_bj)
+        self.stats["quote_symbol_count"] = len(symbols)
+        self.stats["quote_scope"] = "common_sh_sz_plus_bj" if include_bj else "common_sh_sz"
+        self.stats["include_bj"] = include_bj
+        records: list[dict[str, Any]] = []
+        try:
+            for batch in batched(symbols, self.batch_size):
+                text = self._request_text(
+                    "quote",
+                    TENCENT_QUOTE_URL.format(symbols=",".join(batch)),
+                )
+                self.stats["quote_batches"] += 1
+                for item in parse_tencent_quote_text(text):
+                    if item:
+                        records.append(item)
+        finally:
+            self.stats["quote_elapsed_seconds"] = round(time.monotonic() - started, 3)
+        self.stats["quote_rows"] = len(records)
+        if not records:
+            return pd.DataFrame()
+        return pd.DataFrame(records)
+
+    def fetch_qfq_history(self, symbol: str, end_date: str, history_days: int) -> pd.DataFrame:
+        market_symbol = tencent_symbol(symbol)
+        params = {"param": f"{market_symbol},day,,,{max(1, history_days)},qfq"}
+        self.stats["history_requests"] += 1
+        try:
+            payload = self._request_json("qfq_kline", TENCENT_QFQ_KLINE_URL, params=params)
+            frame = normalize_tencent_kline_payload(payload, market_symbol, end_date)
+        except Exception:
+            self.stats["history_failed"] += 1
+            raise
+        self.stats["history_ok"] += 1
+        return frame.tail(history_days)
+
+    def _request_text(self, endpoint: str, url: str, params: dict[str, Any] | None = None) -> str:
+        last_error: Exception | None = None
+        for attempt in range(1, self.retries + 1):
+            try:
+                response = self.session.get(url, params=params, timeout=self.timeout)
+                response.raise_for_status()
+                if not response.encoding:
+                    response.encoding = "gbk"
+                return response.text
+            except Exception as exc:  # pragma: no cover - exercised by live APIs
+                last_error = exc
+                if attempt < self.retries:
+                    time.sleep(min(2.0, 0.4 * attempt))
+        raise TencentClientError(f"{endpoint} failed after {self.retries} attempts: {last_error}")
+
+    def _request_json(self, endpoint: str, url: str, params: dict[str, Any]) -> dict[str, Any]:
+        last_error: Exception | None = None
+        for attempt in range(1, self.retries + 1):
+            try:
+                response = self.session.get(url, params=params, timeout=self.timeout)
+                response.raise_for_status()
+                return response.json()
+            except Exception as exc:  # pragma: no cover - exercised by live APIs
+                last_error = exc
+                if attempt < self.retries:
+                    time.sleep(min(2.0, 0.4 * attempt))
+        raise TencentClientError(f"{endpoint} failed after {self.retries} attempts: {last_error}")
+
+
 def normalize_code(value: Any) -> str:
     digits = "".join(ch for ch in str(value or "") if ch.isdigit())
     if not digits:
         return ""
     return digits[-6:].zfill(6)
+
+
+def batched(items: list[str], size: int) -> list[list[str]]:
+    return [items[index:index + size] for index in range(0, len(items), max(1, size))]
+
+
+def iter_tencent_quote_symbols(include_bj: bool = False) -> list[str]:
+    symbols: list[str] = []
+    ranges = list(TENCENT_COMMON_CODE_RANGES)
+    if include_bj:
+        ranges.extend(TENCENT_BJ_CODE_RANGES)
+    for market, start, end in ranges:
+        for code in range(start, end + 1):
+            symbols.append(f"{market}{code:06d}")
+    return symbols
+
+
+def tencent_market_for_code(code: str) -> str:
+    normalized = normalize_code(code)
+    if normalized.startswith(("60", "68", "90")):
+        return "sh"
+    if normalized.startswith(("43", "83", "87", "88", "92")):
+        return "bj"
+    return "sz"
+
+
+def tencent_symbol(code: str) -> str:
+    normalized = normalize_code(code)
+    return f"{tencent_market_for_code(normalized)}{normalized}"
+
+
+def first_tencent_number(fields: list[str], indexes: list[int]) -> float:
+    for index in indexes:
+        if index < len(fields):
+            value = to_float(fields[index])
+            if finite(value):
+                return value
+    return math.nan
+
+
+def parse_tencent_quote_record(raw: str) -> dict[str, Any] | None:
+    if "=" not in raw:
+        return None
+    prefix, payload = raw.split("=", 1)
+    symbol_hint = prefix.split("_")[-1].strip()
+    fields = payload.strip().strip('";').split("~")
+    if len(fields) < 4:
+        return None
+    code = normalize_code(fields[2] if len(fields) > 2 else symbol_hint)
+    name = fields[1].strip() if len(fields) > 1 else ""
+    close = to_float(fields[3] if len(fields) > 3 else math.nan)
+    if not code or not name or not finite(close) or close <= 0:
+        return None
+    amount_base = first_tencent_number(fields, [57, 37, 36])
+    amount = amount_base * 10_000 if finite(amount_base) else math.nan
+    pct_chg = first_tencent_number(fields, [32, 31])
+    return {
+        "symbol": code,
+        "name": name,
+        "close": close,
+        "amount": amount,
+        "pct_chg": pct_chg,
+        "pct60": math.nan,
+        "_market": tencent_market_for_code(code).upper(),
+    }
+
+
+def parse_tencent_quote_text(text: str) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for part in text.split(";"):
+        parsed = parse_tencent_quote_record(part.strip())
+        if parsed:
+            records.append(parsed)
+    return records
+
+
+def normalize_tencent_kline_payload(payload: dict[str, Any], market_symbol: str, end_date: str) -> pd.DataFrame:
+    data = (payload.get("data") or {}).get(market_symbol) or {}
+    rows = data.get("qfqday") or data.get("day") or []
+    normalized_rows: list[dict[str, Any]] = []
+    for item in rows:
+        if not isinstance(item, list) or len(item) < 5:
+            continue
+        close = to_float(item[2])
+        volume = to_float(item[5] if len(item) > 5 else math.nan)
+        amount = to_float(item[8] if len(item) > 8 else math.nan)
+        if not finite(amount) and finite(volume) and finite(close):
+            amount = volume * close * 100
+        normalized_rows.append(
+            {
+                "date": item[0],
+                "open": item[1],
+                "close": item[2],
+                "high": item[3],
+                "low": item[4],
+                "amount": amount,
+            }
+        )
+    frame = normalize_daily_history(pd.DataFrame(normalized_rows))
+    if frame.empty:
+        return frame
+    end_dt = datetime.strptime(end_date, "%Y%m%d")
+    return frame[frame["date"] <= end_dt].reset_index(drop=True)
+
+
+def tencent_sector_name(symbol: str) -> str:
+    code = normalize_code(symbol)
+    if code.startswith("688"):
+        return "科创板"
+    if code.startswith(("300", "301")):
+        return "创业板"
+    if code.startswith(("43", "83", "87", "88", "92")):
+        return "北交所"
+    if code.startswith(("60", "68", "90")):
+        return "沪市主板"
+    return "深市主板"
 
 
 def to_float(value: Any, default: float = math.nan) -> float:
@@ -1035,6 +1277,75 @@ def default_sector_info() -> dict[str, Any]:
     }
 
 
+def build_tencent_market_info(spot: pd.DataFrame, meta: FetchMeta) -> dict[str, Any]:
+    pct = pd.to_numeric(spot.get("pct_chg"), errors="coerce").fillna(0.0)
+    amount = pd.to_numeric(spot.get("amount"), errors="coerce")
+    positive_ratio = float((pct > 0).mean()) if len(pct) else 0.0
+    strong_ratio = float((pct >= 5).mean()) if len(pct) else 0.0
+    down_ratio = float((pct <= -7).mean()) if len(pct) else 1.0
+    limit_down_count = int((pct <= -9.5).sum()) if len(pct) else 9999
+    info = {
+        "index_pct3": float(pct.mean()) if len(pct) else 0.0,
+        "index_above_ma5_ma10": positive_ratio >= 0.5,
+        "amount_expanding": bool(amount.notna().sum() and amount.quantile(0.75) > amount.median()),
+        "limit_up_premium_good": strong_ratio >= 0.03,
+        "limit_down_risk_low": bool(down_ratio <= 0.02 and limit_down_count <= 100),
+    }
+    meta.market = {
+        "index_pct3": fmt_float(info["index_pct3"], 2),
+        "index_above_ma5_ma10": info["index_above_ma5_ma10"],
+        "amount_expanding": info["amount_expanding"],
+        "limit_up_premium_good": info["limit_up_premium_good"],
+        "limit_down_risk_low": info["limit_down_risk_low"],
+        "large_drop_ratio": fmt_float(down_ratio, 4),
+        "limit_down_count": limit_down_count,
+        "approximation": "tencent_quote_breadth",
+    }
+    return info
+
+
+def build_tencent_sector_model(
+    candidate_symbols: set[str],
+    spot: pd.DataFrame,
+    index_pct3: float,
+    meta: FetchMeta,
+) -> dict[str, dict[str, Any]]:
+    if not candidate_symbols:
+        return {}
+    frame = spot.copy()
+    frame["sector"] = frame["symbol"].map(tencent_sector_name)
+    frame["pct_chg"] = pd.to_numeric(frame["pct_chg"], errors="coerce").fillna(0.0)
+    frame["amount"] = pd.to_numeric(frame["amount"], errors="coerce").fillna(0.0)
+    grouped = frame.groupby("sector", dropna=False)
+    sector_strength = grouped["pct_chg"].mean().sort_values(ascending=False)
+    sector_rank = {
+        sector: (idx + 1) / max(1, len(sector_strength)) * 100
+        for idx, sector in enumerate(sector_strength.index)
+    }
+
+    model: dict[str, dict[str, Any]] = {}
+    for sector, group in grouped:
+        sorted_group = group.sort_values(["pct_chg", "amount"], ascending=[False, False]).reset_index(drop=True)
+        leaders_count = int((sorted_group["pct_chg"] >= 5.0).sum())
+        front_count = max(3, math.ceil(len(sorted_group) * 0.2))
+        front_symbols = set(sorted_group.head(front_count)["symbol"])
+        strength = float(sector_strength.get(sector, 0.0)) - (index_pct3 if finite(index_pct3) else 0.0)
+        recent_amount = sorted_group["amount"].head(front_count).mean()
+        baseline_amount = sorted_group["amount"].mean()
+        amount_expanding = bool(finite(recent_amount) and finite(baseline_amount) and recent_amount >= baseline_amount)
+        for symbol in set(sorted_group["symbol"]) & candidate_symbols:
+            model[symbol] = {
+                "sector": str(sector),
+                "sector_strength_vs_index_3d_pct": strength,
+                "sector_amount_expanding": amount_expanding,
+                "sector_rank_percentile": sector_rank.get(sector, 100.0),
+                "sector_leaders_count": leaders_count,
+                "sector_frontline": symbol in front_symbols,
+            }
+    meta.network_policy["sector_route"] = "tencent_market_segment"
+    return model
+
+
 def build_candidate_row(
     spot_row: dict[str, Any],
     history: pd.DataFrame,
@@ -1111,7 +1422,10 @@ def build_candidate_row(
     return {field: row.get(field, "") for field in CANDIDATE_FIELDS}
 
 
-def resolve_output_path(output_dir: Path, now: datetime, overwrite: bool) -> Path:
+def resolve_output_path(output_dir: Path, now: datetime, overwrite: bool, output_csv: Path | None = None) -> Path:
+    if output_csv is not None:
+        output_csv.parent.mkdir(parents=True, exist_ok=True)
+        return output_csv
     output_dir.mkdir(parents=True, exist_ok=True)
     date_stem = now.strftime("%Y%m%d")
     output = output_dir / f"{date_stem}_candidates.csv"
@@ -1143,7 +1457,201 @@ def is_after_close(now: datetime) -> bool:
     return now.hour > 15 or (now.hour == 15 and now.minute >= 10)
 
 
-def fetch_live_candidates(args: argparse.Namespace) -> tuple[Path, Path, int]:
+def fetch_tencent_stock_history(
+    client: TencentClient,
+    symbol: str,
+    end_date: str,
+    history_days: int,
+    meta: FetchMeta | None,
+) -> pd.DataFrame:
+    try:
+        return client.fetch_qfq_history(symbol, end_date, history_days)
+    except Exception as exc:  # pragma: no cover - exercised by live APIs
+        if meta is not None:
+            meta.add_error(f"tencent_qfq_kline:{symbol}", exc)
+        raise
+
+
+def merge_tencent_history_stats(target: dict[str, Any], source: dict[str, Any]) -> None:
+    for key in ("history_requests", "history_ok", "history_failed"):
+        target[key] = int(target.get(key, 0) or 0) + int(source.get(key, 0) or 0)
+
+
+def build_tencent_candidate_row_from_record(
+    idx: int,
+    record: dict[str, Any],
+    end_date: str,
+    history_days: int,
+    sector_model: dict[str, dict[str, Any]],
+    market_info: dict[str, Any],
+) -> tuple[dict[str, str] | None, str | None, dict[str, Any], list[dict[str, str]]]:
+    del idx
+    client = TencentClient()
+    symbol = str(record["symbol"])
+    errors: list[dict[str, str]] = []
+    try:
+        history = fetch_tencent_stock_history(client, symbol, end_date, history_days, None)
+    except Exception as exc:
+        errors.append({"endpoint": f"tencent_qfq_kline:{symbol}", "error": f"{type(exc).__name__}: {exc}"})
+        return None, "tencent_history_fetch_failed", client.stats, errors
+    if len(history) < 65:
+        return None, f"history_rows_lt_65:{len(history)}", client.stats, errors
+    history_pct60 = pct_change_from(history["close"], 60)
+    if finite(history_pct60) and history_pct60 < 0:
+        return None, f"history_60d_pct_negative:{history_pct60:.2f}", client.stats, errors
+    try:
+        row = build_candidate_row(
+            record,
+            history,
+            sector_model.get(symbol, default_sector_info()),
+            market_info,
+        )
+    except Exception as exc:
+        return None, f"candidate_build_failed:{type(exc).__name__}:{exc}", client.stats, errors
+    return row, None, client.stats, errors
+
+
+def build_tencent_candidate_rows_concurrently(
+    indexed_records: list[tuple[int, dict[str, Any]]],
+    end_date: str,
+    history_days: int,
+    top: int,
+    workers: int,
+    sector_model: dict[str, dict[str, Any]],
+    market_info: dict[str, Any],
+    meta: FetchMeta,
+    tencent_stats: dict[str, Any],
+) -> list[dict[str, str]]:
+    built: list[tuple[int, dict[str, str]]] = []
+    history_started = time.monotonic()
+
+    def apply_result(
+        idx: int,
+        record: dict[str, Any],
+        result: tuple[dict[str, str] | None, str | None, dict[str, Any], list[dict[str, str]]],
+    ) -> None:
+        row, reason, stats, errors = result
+        merge_tencent_history_stats(tencent_stats, stats)
+        meta.api_errors.extend(errors)
+        record_outcome(idx, record, (row, reason), built, meta)
+
+    try:
+        if workers <= 1:
+            for idx, record in indexed_records:
+                result = build_tencent_candidate_row_from_record(
+                    idx,
+                    record,
+                    end_date,
+                    history_days,
+                    sector_model,
+                    market_info,
+                )
+                apply_result(idx, record, result)
+                if len(built) >= top:
+                    break
+            return [row for _, row in sorted(built, key=lambda item: item[0])]
+
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            futures = {
+                executor.submit(
+                    build_tencent_candidate_row_from_record,
+                    idx,
+                    record,
+                    end_date,
+                    history_days,
+                    sector_model,
+                    market_info,
+                ): (idx, record)
+                for idx, record in indexed_records
+            }
+            for future in as_completed(futures):
+                idx, record = futures[future]
+                try:
+                    result = future.result()
+                except Exception as exc:
+                    tencent_stats["history_failed"] = int(tencent_stats.get("history_failed", 0) or 0) + 1
+                    meta.add_error(f"tencent_candidate:{record.get('symbol', '')}", exc)
+                    result = None, f"candidate_build_failed:{type(exc).__name__}:{exc}", {}, []
+                apply_result(idx, record, result)
+                if len(built) >= top:
+                    for pending in futures:
+                        pending.cancel()
+                    break
+        return [row for _, row in sorted(built, key=lambda item: item[0])[:top]]
+    finally:
+        tencent_stats["history_elapsed_seconds"] = round(time.monotonic() - history_started, 3)
+
+
+def fetch_tencent_range_candidates(args: argparse.Namespace) -> tuple[Path, Path, int]:
+    if args.mode != "prefilter":
+        raise SystemExit("Only --mode prefilter is implemented in the first version.")
+
+    started = time.monotonic()
+    now = datetime.now()
+    end_date = args.end_date or now.strftime("%Y%m%d")
+    workers = max(1, int(getattr(args, "workers", 1) or 1))
+    quote_batch_size = max(1, int(getattr(args, "quote_batch_size", TENCENT_BATCH_SIZE) or TENCENT_BATCH_SIZE))
+    include_bj = bool(getattr(args, "include_bj", False))
+    meta = FetchMeta(
+        generated_at=now.isoformat(timespec="seconds"),
+        source=args.source,
+        mode=args.mode,
+        snapshot_session="after_close" if is_after_close(now) else "intraday",
+        requested_top=args.top,
+        max_history=args.max_history,
+        workers=workers,
+    )
+    client = TencentClient(batch_size=quote_batch_size)
+    meta.network_policy = {
+        "provider": "tencent_range",
+        "environment_proxy_policy": "preserved",
+        "direct_session_enabled": True,
+        "direct_session_trust_env": client.session.trust_env,
+        "tencent": client.stats,
+        "fallbacks": [],
+    }
+
+    spot = client.fetch_a_spot(include_bj=include_bj)
+    if spot is None or spot.empty:
+        raise RuntimeError("No spot market data returned from Tencent quote range.")
+    spot = normalize_spot_frame(spot)
+    meta.total_spot_rows = int(len(spot))
+    prefiltered = prefilter_spot(spot, args.max_history, args.min_amount_billion)
+    meta.prefiltered_rows = int(len(prefiltered))
+    market_info = build_tencent_market_info(spot, meta)
+    sector_model = build_tencent_sector_model(
+        set(prefiltered["symbol"]),
+        spot,
+        float(market_info.get("index_pct3") or 0.0),
+        meta,
+    )
+
+    indexed_records = [(idx, row.to_dict()) for idx, row in prefiltered.iterrows()]
+    rows = build_tencent_candidate_rows_concurrently(
+        indexed_records,
+        end_date,
+        args.history_days,
+        args.top,
+        workers,
+        sector_model,
+        market_info,
+        meta,
+        client.stats,
+    )
+    output_csv = resolve_output_path(args.output_dir, now, args.overwrite, getattr(args, "output_csv", None))
+    meta_csv = getattr(args, "meta_output", None) or meta_path_for(output_csv)
+    meta.output_csv = str(output_csv)
+    meta.written_rows = len(rows)
+    client.stats["elapsed_seconds"] = round(time.monotonic() - started, 3)
+    meta.network_policy["tencent"] = client.stats
+    write_candidates_csv(rows, output_csv)
+    write_meta(meta, meta_csv)
+    if not rows:
+        raise SystemExit(f"No live candidates were generated. Empty snapshot: {output_csv}; fetch metadata: {meta_csv}")
+    return output_csv, meta_csv, len(rows)
+
+
+def fetch_akshare_candidates(args: argparse.Namespace) -> tuple[Path, Path, int]:
     if args.source != "akshare":
         raise SystemExit("Only --source akshare is implemented in the first version.")
     if args.mode != "prefilter":
@@ -1200,8 +1708,8 @@ def fetch_live_candidates(args: argparse.Namespace) -> tuple[Path, Path, int]:
         meta,
     )
 
-    output_csv = resolve_output_path(args.output_dir, now, args.overwrite)
-    meta_csv = meta_path_for(output_csv)
+    output_csv = resolve_output_path(args.output_dir, now, args.overwrite, getattr(args, "output_csv", None))
+    meta_csv = getattr(args, "meta_output", None) or meta_path_for(output_csv)
     meta.output_csv = str(output_csv)
     meta.written_rows = len(rows)
     if eastmoney_client:
@@ -1211,6 +1719,18 @@ def fetch_live_candidates(args: argparse.Namespace) -> tuple[Path, Path, int]:
     if not rows:
         raise SystemExit(f"No live candidates were generated. Empty snapshot: {output_csv}; fetch metadata: {meta_csv}")
     return output_csv, meta_csv, len(rows)
+
+
+def fetch_live_candidates(args: argparse.Namespace) -> tuple[Path, Path, int]:
+    if args.source == "tencent_range":
+        return fetch_tencent_range_candidates(args)
+    if args.source == "auto":
+        try:
+            return fetch_tencent_range_candidates(argparse.Namespace(**{**vars(args), "source": "tencent_range"}))
+        except Exception as exc:
+            print(f"Tencent provider failed, falling back to AKShare: {type(exc).__name__}: {exc}")
+            return fetch_akshare_candidates(argparse.Namespace(**{**vars(args), "source": "akshare"}))
+    return fetch_akshare_candidates(args)
 
 
 def build_candidate_rows_concurrently(
@@ -1322,7 +1842,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Fetch real A-share data from AKShare and build a scorer-compatible candidate snapshot."
     )
-    parser.add_argument("--source", default="akshare", choices=["akshare"], help="Data source provider.")
+    parser.add_argument("--source", default="akshare", choices=["akshare", "tencent_range", "auto"], help="Data source provider.")
+    parser.add_argument("--provider", dest="source", choices=["akshare", "tencent_range", "auto"], help="Alias for --source.")
     parser.add_argument("--mode", default="prefilter", choices=["prefilter"], help="Candidate generation mode.")
     parser.add_argument(
         "--eastmoney-route",
@@ -1345,7 +1866,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Minimum current-day turnover in billion CNY for prefiltering.",
     )
     parser.add_argument("--workers", type=int, default=1, help="Concurrent stock-history fetch workers.")
+    parser.add_argument(
+        "--quote-batch-size",
+        type=int,
+        default=TENCENT_BATCH_SIZE,
+        help="Tencent quote symbols per request when --provider tencent_range is used.",
+    )
+    parser.add_argument(
+        "--include-bj",
+        action="store_true",
+        help="Include the broad Beijing Stock Exchange code ranges in Tencent quote scanning.",
+    )
     parser.add_argument("--output-dir", type=Path, default=Path("data/snapshots"), help="Snapshot output directory.")
+    parser.add_argument("--output-csv", type=Path, help="Exact candidate CSV output path.")
+    parser.add_argument("--meta-output", type=Path, help="Exact fetch metadata JSON output path.")
     parser.add_argument("--end-date", help="AKShare end date in YYYYMMDD format; defaults to today.")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite YYYYMMDD snapshot if it already exists.")
     return parser

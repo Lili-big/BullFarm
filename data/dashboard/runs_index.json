@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-06-26T15:32:18",
+  "latest_date": "20260625",
+  "runs": [
+    {
+      "date": "20260625",
+      "selection_date": "2026-06-25",
+      "run_id": "20260625_daily_v1_0",
+      "label": "2026-06-25 auto",
+      "market_env": "auto",
+      "total_selected_count": 51,
+      "top_score": 4,
+      "average_score": 4.0,
+      "score_buckets": {
+        "strong": 0,
+        "trial": 0,
+        "watch": 0,
+        "avoid": 51,
+        "unknown": 0
+      },
+      "has_review": false,
+      "review_status": "missing_review",
+      "run_count": 2,
+      "json_path": "runs/20260625.json"
+    },
+    {
+      "date": "20260623",
+      "selection_date": "2026-06-23",
+      "run_id": "20260623_tencent_range_v1_0",
+      "label": "2026-06-23 弱势/轻仓试错",
+      "market_env": "弱势/轻仓试错",
+      "total_selected_count": 50,
+      "top_score": 87,
+      "average_score": 65.34,
+      "score_buckets": {
+        "strong": 6,
+        "trial": 21,
+        "watch": 19,
+        "avoid": 4,
+        "unknown": 0
+      },
+      "has_review": true,
+      "review_status": "partial_review",
+      "run_count": 2,
+      "json_path": "runs/20260623.json"
+    }
+  ],
+  "strategy_effectiveness": {
+    "run_count": 4,
+    "reviewed_run_count": 2,
+    "valid_stock_count": 50,
+    "win_rate_t3": null,
+    "win_rate_latest": 78.0,
+    "avg_return_latest_pct": 3.32,
+    "avg_return_t3_pct": null,
+    "avg_max_drawdown_3d_pct": null,
+    "hit_stop_loss_count": 18,
+    "hit_take_profit_count": 19,
+    "conclusion": "最新价正向，等待T3"
+  },
+  "source": {
+    "scores_dir": "D:\\codex_workspace\\B\\outputs",
+    "validation_workbook": "D:\\codex_workspace\\B\\data\\validation\\output\\stock_selection_log.xlsx",
+    "run_count": 2
+  }
+}

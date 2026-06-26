@@ -212,6 +212,47 @@ class ValidationResultTests(unittest.TestCase):
         self.assertEqual(comparison[0]["group_name"], "只观察")
         self.assertTrue((report_dir / f"report_{run_id}.md").exists())
 
+    def test_latest_price_update_adds_latest_offset_and_updates_performance(self) -> None:
+        run_id = "20260623_153000_v1_0"
+        self.assertEqual(
+            self.run_cli(
+                "snapshot",
+                "--scores",
+                str(self.scores),
+                "--candidates",
+                str(self.candidates),
+                "--run-id",
+                run_id,
+                "--selection-date",
+                "2026-06-23",
+                "--market-env",
+                "震荡",
+            ),
+            0,
+        )
+        self.assertEqual(
+            self.run_cli(
+                "update-prices",
+                "--run-id",
+                run_id,
+                "--price-file",
+                str(self.prices),
+                "--offsets",
+                "0,1,2,3,5,10",
+                "--latest",
+            ),
+            0,
+        )
+        self.assertEqual(self.run_cli("analyze", "--run-id", run_id), 0)
+
+        future_prices = self.load_records("future_prices")
+        performance = self.load_records("performance")
+        offsets = {str(row["trading_day_offset"]) for row in future_prices}
+        self.assertIn("T10", offsets)
+        self.assertEqual(6, len(future_prices))
+        self.assertEqual("2026-07-07", performance[0]["latest_price_date"])
+        self.assertAlmostEqual(float(performance[0]["latest_price"]), 110.0)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "paths": {
+    "snapshot_root": "data/snapshots",
+    "daily_output_root": "outputs/daily",
+    "latest_name": "latest"
+  },
+  "strategy": {
+    "id": "v1_trend_startup",
+    "version": "v1_0"
+  },
+  "run_id_template": "{run_date}_daily_{strategy_version}",
+  "live_fetch": {
+    "enabled": true,
+    "script": "skills/stock-selection-agent/scripts/fetch_live_candidates.py",
+    "provider": "tencent_range",
+    "mode": "prefilter",
+    "eastmoney_route": "auto",
+    "top": 100,
+    "max_history": 500,
+    "history_days": 150,
+    "min_amount_billion": 0.5,
+    "workers": 4,
+    "quote_batch_size": 800,
+    "include_bj": false,
+    "candidate_name": "candidates.csv",
+    "meta_name": "fetch_meta.json",
+    "skip_live_fetch_sources": [
+      "data/snapshots/{run_date}/candidates.csv",
+      "data/snapshots/{run_date}_candidates.csv",
+      "data/snapshots/{run_date}_tencent_range_candidates.csv",
+      "data/sample_candidates.csv"
+    ]
+  },
+  "scoring": {
+    "script": "skills/stock-selection-agent/scripts/score_candidates.py",
+    "config": "config/scoring_rules.json",
+    "report_name": "selection_report.md",
+    "scores_name": "selection_scores.csv"
+  },
+  "validation_snapshot": {
+    "enabled": true,
+    "commands": [
+      [
+        "{python}",
+        "skills/stock-selection-agent/scripts/validate_selection_results.py",
+        "snapshot",
+        "--scores",
+        "{scores}",
+        "--candidates",
+        "{candidate_csv}",
+        "--run-id",
+        "{run_id}",
+        "--strategy-version",
+        "{strategy_version}",
+        "--selection-date",
+        "{as_of_date}",
+        "--market-env",
+        "auto",
+        "--force"
+      ]
+    ]
+  },
+  "price_update": {
+    "enabled": true,
+    "commands": [
+      [
+        "{python}",
+        "skills/stock-selection-agent/scripts/validate_selection_results.py",
+        "update-prices",
+        "--all",
+        "--latest",
+        "--end-date",
+        "{as_of_date}"
+      ],
+      [
+        "{python}",
+        "skills/stock-selection-agent/scripts/validate_selection_results.py",
+        "analyze",
+        "--all"
+      ]
+    ]
+  },
+  "dashboard": {
+    "enabled": true,
+    "commands": [
+      [
+        "{python}",
+        "skills/stock-selection-agent/scripts/build_dashboard_data.py"
+      ]
+    ]
+  },
+  "supabase": {
+    "enabled": true,
+    "plugin_handoff": true,
+    "require_write": true,
+    "commands": [
+      [
+        "{python}",
+        "skills/stock-selection-agent/scripts/sync_supabase.py",
+        "--run-id",
+        "{run_id}",
+        "--selection-date",
+        "{as_of_date}",
+        "--scores",
+        "{scores}",
+        "--candidates",
+        "{candidate_csv}",
+        "--metadata",
+        "{fetch_meta}",
+        "--report",
+        "{report}",
+        "--include-workbook-runs",
+        "--write-sql-dir",
+        "{supabase_sql_dir}",
+        "--sql-compact"
+      ]
+    ]
+  }
+}

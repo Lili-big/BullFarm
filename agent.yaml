@@ -19,24 +19,84 @@ inputs:
   scoring_config: config/scoring_rules.json
 outputs:
   live_snapshot_dir: data/snapshots
+  daily_snapshot_dir: data/snapshots/YYYYMMDD
+  daily_output_dir: outputs/daily/YYYYMMDD
+  latest_daily_snapshot: data/snapshots/latest
+  latest_daily_output: outputs/daily/latest
   live_fetch_meta: data/snapshots/YYYYMMDD_fetch_meta.json
   markdown_report: outputs/selection_report.md
   scored_csv: outputs/selection_scores.csv
 data_sources:
-  primary: akshare
+  primary: tencent_range
   fallbacks:
+    - akshare
+    - eastmoney-direct
+    - sina-daily
     - tushare-pro
     - baostock
     - efinance
 live_fetch_defaults:
-  source: akshare
+  source: tencent_range
   mode: prefilter
   eastmoney_route: auto
   top: 100
   max_history: 500
   history_days: 150
   min_amount_billion: 0.5
-  workers: 1
+  workers: 4
+  quote_batch_size: 800
+  include_bj: false
+daily_job:
+  config: config/daily_selection.json
+  script: skills/stock-selection-agent/scripts/run_daily_selection.py
+  schedule:
+    timezone: Asia/Shanghai
+    local_time: "08:30"
+    target_date_rule: previous_complete_trading_day
+  required_invocation:
+    - python
+    - skills/stock-selection-agent/scripts/run_daily_selection.py
+    - --run-date
+    - YYYYMMDD
+    - --as-of-date
+    - YYYYMMDD
+  archive_pattern:
+    snapshots: data/snapshots/YYYYMMDD
+    outputs: outputs/daily/YYYYMMDD
+  latest_on_success:
+    snapshots: data/snapshots/latest
+    outputs: outputs/daily/latest
+  failure_manifest: outputs/daily/YYYYMMDD/run_manifest.json
+  price_update: validate_selection_results.py update-prices --all --latest
+  dashboard_refresh: skills/stock-selection-agent/scripts/build_dashboard_data.py
+  supabase_publication_gate:
+    require_write: true
+    pending_bundle: outputs/daily/YYYYMMDD/supabase_sql/manifest.json
+    finalize_after_verification: run_daily_selection.py --finalize-run YYYYMMDD --verified-run-id RUN_ID
+cloud_deployment:
+  frontend:
+    platform: netlify
+    app_dir: frontend
+    build_command: npm run build
+    publish_dir: frontend/dist
+    data_source: Supabase public views
+    required_env:
+      - VITE_SUPABASE_URL
+      - VITE_SUPABASE_ANON_KEY
+  backend:
+    platform: render
+    package: backend
+    web_service: backend.api:app
+    cron_schedule_utc: "30 0 * * *"
+    cron_local_time: "08:30 Asia/Shanghai"
+    required_env_group: stock-selection-env
+  database:
+    platform: supabase
+    public_views:
+      - dashboard_runs_index
+      - dashboard_runs
+    private_tables:
+      - stock_selection_job_runs
 guardrails:
   - Do not treat single-day limit-up as sufficient.
   - Reject downtrend rebounds and liquidity failures.

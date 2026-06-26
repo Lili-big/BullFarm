@@ -9,6 +9,7 @@ import tempfile
 import unittest
 from datetime import datetime
 from pathlib import Path
+from unittest.mock import patch
 
 import pandas as pd
 
@@ -203,6 +204,96 @@ class FetchLiveCandidatesTests(unittest.TestCase):
         self.assertEqual("BK0001", boards.iloc[0]["板块代码"])
         self.assertEqual("300001", cons.iloc[0]["代码"])
         self.assertEqual("测试科技", cons.iloc[0]["名称"])
+
+    def test_parser_accepts_tencent_provider_alias(self) -> None:
+        parser = fetch_live_candidates.build_parser()
+        args = parser.parse_args(["--provider", "tencent_range", "--quote-batch-size", "300", "--include-bj"])
+
+        self.assertEqual("tencent_range", args.source)
+        self.assertEqual(300, args.quote_batch_size)
+        self.assertTrue(args.include_bj)
+
+    def test_tencent_quote_symbols_exclude_bj_by_default(self) -> None:
+        default_symbols = fetch_live_candidates.iter_tencent_quote_symbols()
+        expanded_symbols = fetch_live_candidates.iter_tencent_quote_symbols(include_bj=True)
+
+        self.assertEqual(13_999, len(default_symbols))
+        self.assertEqual(53_999, len(expanded_symbols))
+        self.assertIn("sh600000", default_symbols)
+        self.assertNotIn("bj430000", default_symbols)
+        self.assertIn("bj430000", expanded_symbols)
+
+    def test_tencent_history_builder_merges_worker_stats(self) -> None:
+        meta = self.make_meta()
+        stats = {"history_requests": 0, "history_ok": 0, "history_failed": 0}
+        records = [
+            (0, {"symbol": "300001", "name": "A"}),
+            (1, {"symbol": "300002", "name": "B"}),
+            (2, {"symbol": "600003", "name": "C"}),
+        ]
+
+        def fake_builder(idx, record, *_args):
+            return {"symbol": record["symbol"], "name": record["name"]}, None, {
+                "history_requests": 1,
+                "history_ok": 1,
+                "history_failed": 0,
+            }, []
+
+        with patch.object(fetch_live_candidates, "build_tencent_candidate_row_from_record", side_effect=fake_builder):
+            rows = fetch_live_candidates.build_tencent_candidate_rows_concurrently(
+                records,
+                "20260625",
+                70,
+                3,
+                2,
+                {},
+                {},
+                meta,
+                stats,
+            )
+
+        self.assertEqual(["300001", "300002", "600003"], [row["symbol"] for row in rows])
+        self.assertEqual(3, stats["history_requests"])
+        self.assertEqual(3, stats["history_ok"])
+        self.assertEqual(0, stats["history_failed"])
+        self.assertIn("history_elapsed_seconds", stats)
+
+    def test_tencent_quote_parser_maps_fields_to_spot_contract(self) -> None:
+        fields = [""] * 58
+        fields[1] = "Sample Tech"
+        fields[2] = "300001"
+        fields[3] = "20.5"
+        fields[32] = "3.2"
+        fields[57] = "70000"
+        text = 'v_sz300001="' + "~".join(fields) + '";'
+
+        rows = fetch_live_candidates.parse_tencent_quote_text(text)
+
+        self.assertEqual(1, len(rows))
+        self.assertEqual("300001", rows[0]["symbol"])
+        self.assertEqual("Sample Tech", rows[0]["name"])
+        self.assertEqual(20.5, rows[0]["close"])
+        self.assertEqual(700_000_000, rows[0]["amount"])
+        self.assertEqual("SZ", rows[0]["_market"])
+
+    def test_tencent_qfq_payload_normalizes_to_daily_history(self) -> None:
+        payload = {
+            "data": {
+                "sz300001": {
+                    "qfqday": [
+                        ["2026-06-22", "10", "11", "12", "9", "1000", "", "", "12000000"],
+                        ["2026-06-23", "11", "12", "13", "10", "1100", "", "", "13000000"],
+                        ["2026-06-24", "12", "13", "14", "11", "1200", "", "", "14000000"],
+                    ]
+                }
+            }
+        }
+
+        history = fetch_live_candidates.normalize_tencent_kline_payload(payload, "sz300001", "20260623")
+
+        self.assertEqual(2, len(history))
+        self.assertEqual(12.0, history.iloc[-1]["close"])
+        self.assertEqual(13_000_000, history.iloc[-1]["amount"])
 
     def test_direct_spot_failure_falls_back_to_sina_without_env_change(self) -> None:
         meta = self.make_meta()

@@ -5,7 +5,13 @@ __pycache__/
 .ruff_cache/
 .venv/
 venv/
+node_modules/
 .env
 .env.*
+!frontend/.env.example
+config/local.env
 *.tmp
 *.log
+dashboard/supabase-config.js
+frontend/dist/
+frontend/.env.local

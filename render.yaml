@@ -1,0 +1,32 @@
+envVarGroups:
+  - name: stock-selection-env
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: APP_TIMEZONE
+        value: Asia/Shanghai
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: ADMIN_TRIGGER_TOKEN
+        sync: false
+
+services:
+  - type: web
+    name: stock-selection-api
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.api:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - fromGroup: stock-selection-env
+
+  - type: cron
+    name: stock-selection-daily
+    runtime: python
+    schedule: "30 0 * * *"
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m backend.jobs.daily_selection --trigger-source cron
+    envVars:
+      - fromGroup: stock-selection-env

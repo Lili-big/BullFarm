@@ -3,10 +3,17 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from strategy_registry import StrategySpec, resolve_strategy
 
 
 DEFAULT_CONFIG: dict[str, Any] = {
@@ -399,9 +406,10 @@ def read_candidates(path: Path) -> list[dict[str, str]]:
         return list(csv.DictReader(handle))
 
 
-def write_csv(results: list[CandidateResult], path: Path) -> None:
+def write_csv(results: list[CandidateResult], path: Path, strategy: StrategySpec) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     fields = [
+        "schema_version", "strategy_id", "strategy_version",
         "rank", "symbol", "name", "sector", "total_score", "trend_score",
         "startup_score", "sector_score", "market_score", "decision",
         "continuation", "buy_model", "notes", "risks", "hard_rejects", "plan"
@@ -411,6 +419,9 @@ def write_csv(results: list[CandidateResult], path: Path) -> None:
         writer.writeheader()
         for rank, result in enumerate(results, start=1):
             writer.writerow({
+                "schema_version": strategy.schema_version,
+                "strategy_id": strategy.strategy_id,
+                "strategy_version": strategy.version,
                 "rank": rank,
                 "symbol": result.symbol,
                 "name": result.name,
@@ -430,7 +441,7 @@ def write_csv(results: list[CandidateResult], path: Path) -> None:
             })
 
 
-def write_markdown(results: list[CandidateResult], path: Path, source: Path) -> None:
+def write_markdown(results: list[CandidateResult], path: Path, source: Path, strategy: StrategySpec) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     lines: list[str] = []
     lines.append("# 选股 Agent 评分报告")
@@ -468,6 +479,7 @@ def write_markdown(results: list[CandidateResult], path: Path, source: Path) -> 
             lines.append(f"- 硬性回避：{'；'.join(s.hard_rejects)}")
         lines.append(f"- 参与策略：{result.plan}")
         lines.append("")
+    lines.insert(4, f"- Strategy: `{strategy.strategy_id}` / `{strategy.version}` / schema `{strategy.schema_version}`")
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
@@ -481,8 +493,13 @@ def main() -> int:
     parser.add_argument("--config", type=Path, help="Optional scoring config JSON path.")
     parser.add_argument("--output", type=Path, default=Path("outputs/selection_report.md"), help="Markdown report output path.")
     parser.add_argument("--csv-output", type=Path, default=Path("outputs/selection_scores.csv"), help="Scored CSV output path.")
+    parser.add_argument("--strategy-version", default="v1_0", help="Strategy version or id to apply.")
     args = parser.parse_args()
 
+    try:
+        strategy = resolve_strategy(args.strategy_version)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
     config = load_config(args.config)
     rows = read_candidates(args.input)
     if not rows:
@@ -490,8 +507,8 @@ def main() -> int:
 
     results = [score_candidate(row, config) for row in rows]
     results.sort(key=lambda result: (decision_rank(result.decision), -result.score.total, result.symbol))
-    write_markdown(results, args.output, args.input)
-    write_csv(results, args.csv_output)
+    write_markdown(results, args.output, args.input, strategy)
+    write_csv(results, args.csv_output, strategy)
     print(f"Scored {len(results)} candidates.")
     print(f"Markdown report: {args.output}")
     print(f"CSV scores: {args.csv_output}")

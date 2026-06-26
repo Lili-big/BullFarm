@@ -32,6 +32,27 @@ python .\skills\stock-selection-agent\scripts\score_candidates.py `
 - `outputs/selection_report.md`：可读的选股报告。
 - `outputs/selection_scores.csv`：结构化评分结果。
 
+## Dashboard
+
+生成本地 Dashboard 数据：
+
+```powershell
+python .\skills\stock-selection-agent\scripts\build_dashboard_data.py
+```
+
+脚本会写入：
+
+- `data/dashboard/runs_index.json`：日期索引和核心指标摘要。
+- `data/dashboard/runs/YYYYMMDD.json`：单日选股明细、筛选项和复盘状态。
+
+页面入口是 `dashboard/index.html`。本地预览时在项目根目录启动静态服务：
+
+```powershell
+python -m http.server 8000
+```
+
+然后打开 `http://127.0.0.1:8000/dashboard/`。页面会优先读取 `window.STOCK_DASHBOARD_CONFIG` 或 `localStorage.stockDashboardSupabase` 中配置的 Supabase 公共视图；未配置或读取失败时，自动读取本地 JSON。
+
 ## 真实数据快照
 
 第一版真实数据接入使用 AKShare。先安装依赖：
@@ -44,14 +65,19 @@ python -m pip install -r .\requirements.txt
 
 ```powershell
 python .\skills\stock-selection-agent\scripts\fetch_live_candidates.py `
-  --source akshare `
+  --provider tencent_range `
   --mode prefilter `
   --eastmoney-route auto `
   --top 100 `
   --max-history 500 `
-  --workers 1 `
+  --workers 4 `
+  --quote-batch-size 800 `
   --output-dir .\data\snapshots
 ```
+
+Tencent range fetch defaults to common SH/SZ code ranges. Use `--include-bj`
+only when the broad Beijing Stock Exchange scan is required. Tencent history
+fetching supports `--workers`; the daily config uses 4 by default.
 
 脚本会生成：
 
@@ -60,7 +86,7 @@ python .\skills\stock-selection-agent\scripts\fetch_live_candidates.py `
 
 如果同一天的快照已经存在，脚本默认生成 `YYYYMMDD_HHMMSS_candidates.csv`；传入 `--overwrite` 会覆盖当天快照。
 
-当前环境下 AKShare 历史接口单线程更稳定；如果网络质量较好，可以把 `--workers` 调到 2-6 加速历史数据扫描。
+Tencent 路径默认用 `--workers 4` 并发抓历史 K 线；AKShare 兜底路径仍可按网络质量调整 `--workers`。
 
 脚本不会修改 Windows、本机代理或当前终端的 `HTTP_PROXY` / `HTTPS_PROXY` / `ALL_PROXY`。东方财富 `push2.eastmoney.com` 实时行情和行业接口默认使用脚本内部的独立 direct session，并只在这个 session 上禁用环境代理；这不会影响 Codex 或其他程序的代理设置。
 
@@ -80,6 +106,54 @@ python .\skills\stock-selection-agent\scripts\score_candidates.py `
   --output .\outputs\selection_report.md `
   --csv-output .\outputs\selection_scores.csv
 ```
+
+## Daily orchestration
+
+Run the daily job from the project root with the archive date and market
+as-of date set to the same complete trading day:
+
+```powershell
+python .\skills\stock-selection-agent\scripts\run_daily_selection.py `
+  --run-date 20260625 `
+  --as-of-date 20260625
+```
+
+The Codex automation `股票筛选每日全量选股` is scheduled for 08:30
+Asia/Shanghai every day. It first computes `target_date` as the previous
+complete trading day, then runs:
+
+```powershell
+python .\skills\stock-selection-agent\scripts\run_daily_selection.py `
+  --run-date <target_date> `
+  --as-of-date <target_date>
+```
+
+The job archives inputs under `data/snapshots/YYYYMMDD/` and results under
+`outputs/daily/YYYYMMDD/`. On success it refreshes `data/snapshots/latest/`
+and `outputs/daily/latest/`; on failure it writes
+`outputs/daily/YYYYMMDD/run_manifest.json` and leaves `latest` untouched.
+The configured pipeline also updates historical validation prices with the
+latest available quote, rebuilds dashboard JSON, and syncs the run payload to
+Supabase.
+
+Supabase is a publication gate. If the service-role environment is unavailable,
+the runner writes a SQL bundle under `outputs/daily/YYYYMMDD/supabase_sql/`,
+marks the manifest `pending_supabase`, and does not publish `latest`. Execute
+the bundle, verify the public dashboard views and anon read-only permissions,
+then finalize with:
+
+```powershell
+python .\skills\stock-selection-agent\scripts\run_daily_selection.py `
+  --finalize-run <target_date> `
+  --verified-run-id <run_id>
+```
+
+Useful safe-run flags:
+
+- `--dry-run`: print the planned stages and commands without writing outputs.
+- `--skip-live-fetch`: use an existing snapshot or `data/sample_candidates.csv`.
+- `--skip-supabase`: skip the publish/upload stage.
+- `--skip-price-update`: skip the validation price-update stage.
 
 ## 输入字段
 
@@ -136,6 +210,33 @@ python .\skills\stock-selection-agent\scripts\validate_selection_results.py repo
 python .\skills\stock-selection-agent\scripts\validate_selection_results.py update-prices `
   --run-id 20260623_153000_v1_0 `
   --price-file .\data\validation\input\prices\prices.csv
+
 ```
+
+## Supabase sync environment
+
+The Supabase sync script builds local upsert payloads first and only writes when both server-side credentials are present.
+
+Local setup:
+
+```powershell
+Copy-Item .\config\local.env.example .\config\local.env
+notepad .\config\local.env
+```
+
+Fill in:
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+`config/local.env` is ignored by git and must never be committed. OS-level environment variables with the same names still take precedence over this local file.
+
+Dry-run example:
+
+```powershell
+python .\skills\stock-selection-agent\scripts\sync_supabase.py --dry-run --print-payload
+```
+
+If either variable is missing, the script reports `skipped` and does not connect to Supabase.
 
 本地价格文件字段至少包含：`trade_date`、`stock_code`、`open`、`high`、`low`、`close`、`volume`、`amount`、`turnover_rate`。

@@ -2,3 +2,6 @@ akshare
 pandas
 requests
 openpyxl
+supabase==2.31.0
+fastapi
+uvicorn[standard]

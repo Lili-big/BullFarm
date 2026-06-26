@@ -804,6 +804,23 @@ def records_for_offsets(records: list[PriceRecord], selection_date: str, offsets
     return {idx: record for idx, record in enumerate(eligible) if idx in set(offsets)}
 
 
+def records_for_offsets_with_latest(
+    records: list[PriceRecord],
+    selection_date: str,
+    offsets: list[int],
+    include_latest: bool = False,
+) -> dict[int, PriceRecord]:
+    selected = records_for_offsets(records, selection_date, offsets)
+    if not include_latest:
+        return selected
+    eligible = [record for record in records if record.trade_date >= selection_date]
+    eligible.sort(key=lambda item: item.trade_date)
+    if not eligible:
+        return selected
+    selected[len(eligible) - 1] = eligible[-1]
+    return selected
+
+
 def command_update_prices(args: argparse.Namespace) -> int:
     config = load_config(args.config)
     output_excel = resolve_project_path(args.output_excel or config["validation"]["output_excel"])
@@ -827,8 +844,8 @@ def command_update_prices(args: argparse.Namespace) -> int:
             else:
                 price_records = fetch_akshare_prices(code, selection_date, args.end_date)
                 source = "akshare.stock_zh_a_hist"
-            by_offset = records_for_offsets(price_records, selection_date, offsets)
-            for offset in offsets:
+            by_offset = records_for_offsets_with_latest(price_records, selection_date, offsets, args.latest)
+            for offset in sorted(by_offset):
                 record = by_offset.get(offset)
                 if not record:
                     continue
@@ -1372,6 +1389,7 @@ def build_parser() -> argparse.ArgumentParser:
     update_prices.add_argument("--offsets", default=None)
     update_prices.add_argument("--price-file", type=Path, default=None)
     update_prices.add_argument("--end-date", default=None)
+    update_prices.add_argument("--latest", action="store_true", help="Also store the latest available trading day price.")
     update_prices.set_defaults(func=command_update_prices)
 
     analyze = sub.add_parser("analyze", help="Analyze performance for one or all runs.")
