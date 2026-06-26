@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 const config = {
   supabaseUrl: import.meta.env.VITE_SUPABASE_URL || "",
