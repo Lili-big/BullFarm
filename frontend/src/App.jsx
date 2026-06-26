@@ -251,7 +251,7 @@ export default function App() {
     <main className="shell">
       <header className="topbar">
         <div>
-          <h1>选股看板</h1>
+          <h1>牧牛记</h1>
           <p className="subtitle">核心指标与明细数据来自 Supabase 公共视图。</p>
         </div>
         <div className="toolbar">

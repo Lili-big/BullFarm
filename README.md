@@ -1,116 +1,115 @@
-# 选股 Agent 项目
+# 牧牛记
 
-这个项目把你的选股框架落成了一个可运行的规则型 Agent：先看 60-120 日趋势，再看近 5 日启动，再看板块是否是近期主线，最后用大盘环境决定能不能进攻和仓位。
+牧牛记是一个规则型 A 股选股系统。当前项目已经从单机脚本重构为三层部署架构：Netlify 承载公开只读看板，Render 承载后端 API 与每日选股任务，Supabase 作为生产数据库和看板唯一数据源。
+
+核心选股算法仍保留在 `skills/stock-selection-agent/scripts/` 下，云端改造主要增加部署壳、任务状态、Supabase 写入和前端读取链路。
+
+## 架构
+
+```mermaid
+flowchart LR
+  A["Render Cron<br/>每天 00:30 UTC"] --> B["backend.jobs.daily_selection"]
+  C["Render Web Service<br/>FastAPI"] --> B
+  B --> D["现有选股脚本<br/>fetch -> score -> sync"]
+  D --> E["Supabase<br/>事实表 + 公共视图"]
+  F["Netlify<br/>frontend/ Vite App"] --> E
+```
+
+- 前端：`frontend/`，Vite + React，部署到 Netlify。
+- 后端：`backend/`，FastAPI + Uvicorn，部署到 Render Web Service。
+- 定时任务：Render Cron Job，每天 UTC `00:30`，对应北京时间 `08:30`。
+- 数据库：Supabase，事实表由 `service_role` 写入，公共 dashboard 视图由 anon 只读访问。
+- 本地辅助：Excel 和 `data/dashboard/` 仍可用于开发、导出和回放，不再作为生产主数据源。
 
 ## 目录
 
-- `agent.yaml`：Agent 项目配置和处理流程。
-- `config/scoring_rules.json`：评分阈值、流动性门槛和风险参数。
-- `data/sample_candidates.csv`：虚构样例数据，用来验证流程。
-- `data/snapshots/`：真实行情快照输出目录，运行抓取脚本后自动生成。
-- `requirements.txt`：真实数据抓取所需的 Python 依赖。
-- `skills/stock-selection-agent/SKILL.md`：可复用的 Codex Skill 能力说明。
-- `skills/stock-selection-agent/scripts/fetch_live_candidates.py`：AKShare 真实数据快照生成脚本。
-- `skills/stock-selection-agent/scripts/score_candidates.py`：评分脚本。
-- `skills/stock-selection-agent/references/scoring-model.md`：完整评分规则。
-- `outputs/`：生成报告的位置。
+- `frontend/`：牧牛记看板，读取 Supabase 公共视图 `dashboard_runs_index` 和 `dashboard_runs`。
+- `backend/api.py`：Render Web Service 入口，提供健康检查、手动触发和任务状态查询。
+- `backend/jobs/daily_selection.py`：Render Cron 包装器，计算上一完整交易日并调用现有日任务。
+- `backend/jobs/supabase_price_update.py`：Supabase 价格和表现 upsert 辅助逻辑。
+- `skills/stock-selection-agent/scripts/`：原有选股、评分、验证、Supabase 同步脚本。
+- `config/daily_selection.json`：本地完整日任务配置，会更新本地 Excel、dashboard JSON 和 Supabase。
+- `config/render_daily_selection.json`：Render 生产任务配置，只执行抓取、评分和 Supabase 写入。
+- `supabase/migrations/`：Supabase 表、RLS、公共视图和任务状态表迁移。
+- `render.yaml`：Render Web Service + Cron Job Blueprint。
+- `netlify.toml`：Netlify 构建配置。
+- `docs/cloud_deployment.md`：云端部署细节。
 
-## 快速运行
+## 数据链路
 
-在 `stock-selection-agent` 目录下运行：
+1. Render Cron 在北京时间 08:30 触发。
+2. `backend.jobs.daily_selection` 计算上一完整交易日作为 `run_date` 和 `as_of_date`。
+3. 现有脚本抓取 Tencent 行情和前复权 K 线，生成候选池。
+4. 评分脚本输出 `selection_scores.csv` 和 Markdown 报告。
+5. `sync_supabase.py` 将 run、results、prices、performance 结构化写入 Supabase。
+6. Supabase 公共视图聚合出 dashboard 所需日期、核心指标和明细 payload。
+7. Netlify 前端只用 anon key 读取公共视图并展示。
 
-```powershell
-python .\skills\stock-selection-agent\scripts\score_candidates.py `
-  --input .\data\sample_candidates.csv `
-  --config .\config\scoring_rules.json `
-  --output .\outputs\selection_report.md `
-  --csv-output .\outputs\selection_scores.csv
-```
+## 环境变量
 
-运行后会生成：
-
-- `outputs/selection_report.md`：可读的选股报告。
-- `outputs/selection_scores.csv`：结构化评分结果。
-
-## Dashboard
-
-生成本地 Dashboard 数据：
+本地开发可复制模板：
 
 ```powershell
-python .\skills\stock-selection-agent\scripts\build_dashboard_data.py
+Copy-Item .\config\local.env.example .\config\local.env
+notepad .\config\local.env
 ```
 
-脚本会写入：
+需要填写：
 
-- `data/dashboard/runs_index.json`：日期索引和核心指标摘要。
-- `data/dashboard/runs/YYYYMMDD.json`：单日选股明细、筛选项和复盘状态。
-
-页面入口是 `dashboard/index.html`。本地预览时在项目根目录启动静态服务：
-
-```powershell
-python -m http.server 8000
+```text
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+ADMIN_TRIGGER_TOKEN=
+APP_TIMEZONE=Asia/Shanghai
 ```
 
-然后打开 `http://127.0.0.1:8000/dashboard/`。页面会优先读取 `window.STOCK_DASHBOARD_CONFIG` 或 `localStorage.stockDashboardSupabase` 中配置的 Supabase 公共视图；未配置或读取失败时，自动读取本地 JSON。
+`config/local.env` 已被 git 忽略，不能提交。
 
-## 真实数据快照
+Render 环境变量：
 
-第一版真实数据接入使用 AKShare。先安装依赖：
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `ADMIN_TRIGGER_TOKEN`
+- `APP_TIMEZONE=Asia/Shanghai`
+
+Netlify 环境变量：
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_DASHBOARD_RUNS_INDEX_VIEW=dashboard_runs_index`
+- `VITE_DASHBOARD_RUN_DETAIL_VIEW=dashboard_runs`
+
+不要把 `SUPABASE_SERVICE_ROLE_KEY` 放进 Netlify 或任何前端文件。
+
+## 本地运行
+
+安装 Python 依赖：
 
 ```powershell
 python -m pip install -r .\requirements.txt
 ```
 
-收盘后或盘中都可以生成快照，盘中快照会在元数据中标记为 `intraday`：
+安装前端依赖：
 
 ```powershell
-python .\skills\stock-selection-agent\scripts\fetch_live_candidates.py `
-  --provider tencent_range `
-  --mode prefilter `
-  --eastmoney-route auto `
-  --top 100 `
-  --max-history 500 `
-  --workers 4 `
-  --quote-batch-size 800 `
-  --output-dir .\data\snapshots
+npm.cmd --prefix frontend install
 ```
 
-Tencent range fetch defaults to common SH/SZ code ranges. Use `--include-bj`
-only when the broad Beijing Stock Exchange scan is required. Tencent history
-fetching supports `--workers`; the daily config uses 4 by default.
-
-脚本会生成：
-
-- `data/snapshots/YYYYMMDD_candidates.csv`：兼容评分器的真实候选股快照。
-- `data/snapshots/YYYYMMDD_fetch_meta.json`：抓取统计、接口异常、跳过原因和市场环境元数据。
-
-如果同一天的快照已经存在，脚本默认生成 `YYYYMMDD_HHMMSS_candidates.csv`；传入 `--overwrite` 会覆盖当天快照。
-
-Tencent 路径默认用 `--workers 4` 并发抓历史 K 线；AKShare 兜底路径仍可按网络质量调整 `--workers`。
-
-脚本不会修改 Windows、本机代理或当前终端的 `HTTP_PROXY` / `HTTPS_PROXY` / `ALL_PROXY`。东方财富 `push2.eastmoney.com` 实时行情和行业接口默认使用脚本内部的独立 direct session，并只在这个 session 上禁用环境代理；这不会影响 Codex 或其他程序的代理设置。
-
-`--eastmoney-route` 可选值：
-
-- `auto`：默认值，优先使用项目内 direct session，失败后降级到 AKShare/Sina 路径。
-- `direct`：只使用项目内 direct session 获取东方财富实时行情；行情入口失败时退出。
-- `akshare`：使用 AKShare 自带东方财富接口，便于对照调试代理行为。
-- `off`：跳过东方财富实时/行业接口，只走现有 fallback。
-
-生成快照后，用真实数据执行评分：
+运行一次前端构建：
 
 ```powershell
-python .\skills\stock-selection-agent\scripts\score_candidates.py `
-  --input .\data\snapshots\YYYYMMDD_candidates.csv `
-  --config .\config\scoring_rules.json `
-  --output .\outputs\selection_report.md `
-  --csv-output .\outputs\selection_scores.csv
+npm.cmd --prefix frontend run build
 ```
 
-## Daily orchestration
+本地预览前端：
 
-Run the daily job from the project root with the archive date and market
-as-of date set to the same complete trading day:
+```powershell
+npm.cmd --prefix frontend run dev
+```
+
+## 选股与同步
+
+本地执行完整日任务：
 
 ```powershell
 python .\skills\stock-selection-agent\scripts\run_daily_selection.py `
@@ -118,125 +117,104 @@ python .\skills\stock-selection-agent\scripts\run_daily_selection.py `
   --as-of-date 20260625
 ```
 
-The Codex automation `股票筛选每日全量选股` is scheduled for 08:30
-Asia/Shanghai every day. It first computes `target_date` as the previous
-complete trading day, then runs:
+Render dry-run 计划检查：
 
 ```powershell
-python .\skills\stock-selection-agent\scripts\run_daily_selection.py `
-  --run-date <target_date> `
-  --as-of-date <target_date>
+python -m backend.jobs.daily_selection --dry-run --trigger-source local
 ```
 
-The job archives inputs under `data/snapshots/YYYYMMDD/` and results under
-`outputs/daily/YYYYMMDD/`. On success it refreshes `data/snapshots/latest/`
-and `outputs/daily/latest/`; on failure it writes
-`outputs/daily/YYYYMMDD/run_manifest.json` and leaves `latest` untouched.
-The configured pipeline also updates historical validation prices with the
-latest available quote, rebuilds dashboard JSON, and syncs the run payload to
-Supabase.
-
-Supabase is a publication gate. If the service-role environment is unavailable,
-the runner writes a SQL bundle under `outputs/daily/YYYYMMDD/supabase_sql/`,
-marks the manifest `pending_supabase`, and does not publish `latest`. Execute
-the bundle, verify the public dashboard views and anon read-only permissions,
-then finalize with:
+单独把当前结果同步到 Supabase：
 
 ```powershell
-python .\skills\stock-selection-agent\scripts\run_daily_selection.py `
-  --finalize-run <target_date> `
-  --verified-run-id <run_id>
+python .\skills\stock-selection-agent\scripts\sync_supabase.py `
+  --run-id 20260625_daily_v1_0 `
+  --selection-date 20260625 `
+  --scores .\outputs\selection_scores_20260625.csv `
+  --candidates .\data\snapshots\20260625_tencent_range_candidates.csv `
+  --metadata .\data\snapshots\20260625_tencent_range_fetch_meta.json `
+  --report .\outputs\selection_report_20260625.md
 ```
 
-Useful safe-run flags:
-
-- `--dry-run`: print the planned stages and commands without writing outputs.
-- `--skip-live-fetch`: use an existing snapshot or `data/sample_candidates.csv`.
-- `--skip-supabase`: skip the publish/upload stage.
-- `--skip-price-update`: skip the validation price-update stage.
-
-## 输入字段
-
-最重要的字段包括：
-
-- 基础信息：`symbol`、`name`、`sector`、`is_st`
-- 趋势：`close`、`ma5`、`ma20`、`ma60`、`ma5_slope_pct`、`ma20_slope_pct`、`ma60_slope_pct`
-- 流动性：`avg_amount_20d_billion`
-- 结构：`platform_breakout`、`trend_pullback`、`strong_consolidation_restart`、`downtrend_rebound`
-- 近 5 日：`recent5_low_rising`、`recent5_gain_pct`、`volume_breakout`、`volume_pullback_shrink`、`upper_shadow_ratio`
-- 板块：`sector_strength_vs_index_3d_pct`、`sector_amount_expanding`、`sector_rank_percentile`、`sector_leaders_count`、`sector_frontline`
-- 大盘：`market_index_above_ma5_ma10`、`market_amount_expanding`、`market_limit_up_premium_good`、`market_limit_down_risk_low`
-
-## 结论分层
-
-- `强参与`：总分 80 分以上，且趋势、启动、板块、大盘都过线。
-- `轻仓试错`：65-80 分，或个股不错但市场/板块限制仓位。
-- `只观察`：50-65 分，等待突破、回踩确认或板块走强。
-- `回避`：50 分以下、趋势不合格、下降趋势反抽、ST、流动性不足或高位强转弱。
-
-风险提示：这个工具只做规则化筛选，不构成投资建议；真实使用前需要接入实时行情、公告、流动性和个人风控。
-
-## 选股结果验证闭环
-
-评分完成后，可以把每一次选股结果写入统一 Excel 总表，并在后续交易日补充 T0/T1/T2/T3/T5/T10 行情，复盘这批结果是否盈利。
-
-默认总表位置：`data/validation/output/stock_selection_log.xlsx`。脚本每次写入前会把旧总表备份到 `data/validation/output/backup/`。
-
-```powershell
-python .\skills\stock-selection-agent\scripts\validate_selection_results.py snapshot `
-  --scores .\outputs\selection_scores.csv `
-  --candidates .\data\snapshots\YYYYMMDD_candidates.csv `
-  --market-env 震荡
-
-python .\skills\stock-selection-agent\scripts\validate_selection_results.py update-prices `
-  --run-id 20260623_153000_v1_0 `
-  --offsets 0,1,2,3,5,10
-
-python .\skills\stock-selection-agent\scripts\validate_selection_results.py analyze `
-  --run-id 20260623_153000_v1_0
-
-python .\skills\stock-selection-agent\scripts\validate_selection_results.py compare `
-  --group-by participation_level
-
-python .\skills\stock-selection-agent\scripts\validate_selection_results.py report `
-  --run-id 20260623_153000_v1_0
-```
-
-验证逻辑使用选股快照里的 `close` 作为默认 `selection_price`，再按真实交易日补充后续收盘价。收益按 `(future_price - selection_price) / selection_price * 100` 计算；停牌、缺价、未来价格不足会写入状态，不会中断复盘流程。
-
-离线调试补价时，可以传入本地 CSV 或 Excel 行情文件：
-
-```powershell
-python .\skills\stock-selection-agent\scripts\validate_selection_results.py update-prices `
-  --run-id 20260623_153000_v1_0 `
-  --price-file .\data\validation\input\prices\prices.csv
-
-```
-
-## Supabase sync environment
-
-The Supabase sync script builds local upsert payloads first and only writes when both server-side credentials are present.
-
-Local setup:
-
-```powershell
-Copy-Item .\config\local.env.example .\config\local.env
-notepad .\config\local.env
-```
-
-Fill in:
-
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
-
-`config/local.env` is ignored by git and must never be committed. OS-level environment variables with the same names still take precedence over this local file.
-
-Dry-run example:
+安全 dry-run：
 
 ```powershell
 python .\skills\stock-selection-agent\scripts\sync_supabase.py --dry-run --print-payload
 ```
 
-If either variable is missing, the script reports `skipped` and does not connect to Supabase.
+## Render 部署
 
-本地价格文件字段至少包含：`trade_date`、`stock_code`、`open`、`high`、`low`、`close`、`volume`、`amount`、`turnover_rate`。
+Web Service：
+
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `uvicorn backend.api:app --host 0.0.0.0 --port $PORT`
+- Root Directory: 留空
+
+Cron Job：
+
+- Schedule: `30 0 * * *`
+- Command: `python -m backend.jobs.daily_selection --trigger-source cron`
+
+受保护手动触发：
+
+```bash
+curl -X POST "$RENDER_API_URL/jobs/daily-selection" \
+  -H "Authorization: Bearer $ADMIN_TRIGGER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"dry_run": true}'
+```
+
+查询任务状态：
+
+```bash
+curl "$RENDER_API_URL/jobs/<job_id>" \
+  -H "Authorization: Bearer $ADMIN_TRIGGER_TOKEN"
+```
+
+## Supabase
+
+迁移文件在 `supabase/migrations/`：
+
+- `stock_selection_runs`
+- `stock_selection_results`
+- `stock_selection_prices`
+- `stock_selection_performance`
+- `stock_selection_job_runs`
+- 公共视图：`dashboard_runs_index`、`dashboard_runs`、`v_selection_*`
+
+访问模型：
+
+- `service_role`：写入事实表、价格、表现和任务状态。
+- `anon` / `authenticated`：只读 dashboard/public views。
+- `stock_selection_job_runs`：只允许 `service_role` 访问。
+
+## 测试
+
+完整测试：
+
+```powershell
+python -m unittest discover -s tests -v
+```
+
+云端重构相关测试：
+
+```powershell
+python -m unittest tests.test_cloud_refactor_contract -v
+```
+
+前端构建检查：
+
+```powershell
+npm.cmd --prefix frontend run build
+```
+
+确认前端构建产物不含服务端密钥标记：
+
+```powershell
+rg "SUPABASE_SERVICE_ROLE_KEY|SERVICE_ROLE|service_role" frontend\dist
+```
+
+该命令应无匹配结果。
+
+## 风险说明
+
+牧牛记只做规则化筛选、复盘和数据看板，不构成投资建议。真实使用前仍需结合实时行情、公告、流动性、交易规则和个人风险控制。
