@@ -33,8 +33,12 @@ select {
   font: inherit;
 }
 
+button {
+  cursor: pointer;
+}
+
 .shell {
-  max-width: 1280px;
+  max-width: 1760px;
   margin: 0 auto;
   padding: 24px;
 }
@@ -200,8 +204,26 @@ input:focus {
   color: var(--text);
 }
 
+.results-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.view-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--muted);
+  padding: 3px 9px;
+  font-size: 12px;
+}
+
 .table-wrap {
-  overflow: hidden;
+  overflow-x: auto;
 }
 
 table {
@@ -210,106 +232,203 @@ table {
   table-layout: fixed;
 }
 
+.current-table {
+  min-width: 1540px;
+}
+
+.history-table {
+  min-width: 980px;
+}
+
 th,
 td {
-  padding: 12px 14px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--line);
   text-align: left;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 th {
+  padding: 11px 12px;
   color: var(--muted);
   font-size: 12px;
   font-weight: 650;
   background: #f9fafb;
+  white-space: nowrap;
 }
 
 tbody tr:hover {
   background: #f9fbff;
 }
 
+.history-table tbody tr {
+  cursor: pointer;
+}
+
+.selected-row,
+.selected-row:hover {
+  background: #eff6ff;
+}
+
 .rank {
-  width: 72px;
+  width: 64px;
   color: var(--muted);
 }
 
+.target-col {
+  width: 128px;
+}
+
+.sector-col {
+  width: 124px;
+}
+
+.buy-col {
+  width: 148px;
+}
+
+.plan-col {
+  width: 104px;
+}
+
+.reason-col {
+  width: 188px;
+}
+
+.risk-col {
+  width: 228px;
+}
+
+.price-col {
+  width: 190px;
+}
+
 .score-col {
-  width: 132px;
+  width: 108px;
 }
 
 .decision-col,
 .review-col {
-  width: 132px;
+  width: 124px;
+}
+
+.price-points-col {
+  width: 160px;
+}
+
+.selection-price-col,
+.price-stage-col {
+  width: 138px;
+}
+
+.detail-action-col {
+  width: 84px;
+}
+
+.history-table .target-col {
+  width: 150px;
+}
+
+.history-table .review-col {
+  width: 128px;
+}
+
+.history-table .score-col {
+  width: 96px;
+}
+
+.price-stage-col small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.target-line {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 6px;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .name {
   font-weight: 700;
-  margin-bottom: 2px;
+  min-width: 0;
+  margin-bottom: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .code {
+  flex: 0 0 auto;
   color: var(--muted);
   font-size: 12px;
-}
-
-details {
-  margin-top: 8px;
-}
-
-summary {
-  cursor: pointer;
-  color: var(--blue);
-  width: max-content;
-}
-
-.detail-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px 14px;
-  margin-top: 8px;
-  color: var(--muted);
-}
-
-.detail-grid strong {
-  display: block;
-  color: var(--text);
-  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .muted {
   color: var(--muted);
 }
 
-.price-points-panel {
-  grid-column: 1 / -1;
+.truncate {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.price-points-table {
-  margin-top: 6px;
+.price-cell {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.price-cell strong {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.price-cell span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.price-cell span.good {
+  color: var(--green);
+}
+
+.price-cell span.bad {
+  color: var(--red);
+}
+
+.price-cell.base span {
+  font-weight: 500;
+}
+
+.plain-button {
+  min-height: 28px;
   border: 1px solid var(--line);
   border-radius: 6px;
-  overflow: hidden;
-}
-
-.price-points-table table {
-  table-layout: auto;
-}
-
-.price-points-table th,
-.price-points-table td {
-  padding: 7px 9px;
+  background: #fff;
+  color: var(--blue);
+  padding: 4px 9px;
   font-size: 12px;
 }
 
-.pct.good {
-  color: var(--green);
-  font-weight: 700;
-}
-
-.pct.bad {
-  color: var(--red);
-  font-weight: 700;
+.plain-button:hover {
+  border-color: var(--blue);
+  background: #eff6ff;
 }
 
 .chip {
@@ -322,7 +441,9 @@ summary {
   color: var(--text);
   padding: 3px 9px;
   line-height: 1.2;
-  word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chip.good {
@@ -357,6 +478,101 @@ summary {
   height: 100%;
   border-radius: inherit;
   background: var(--blue);
+}
+
+.compact-score strong {
+  margin-bottom: 4px;
+}
+
+.history-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.history-layout.has-detail {
+  grid-template-columns: minmax(0, 1fr) 320px;
+}
+
+.detail-sidebar {
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.detail-sidebar-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.detail-sidebar-head strong {
+  display: block;
+  font-size: 16px;
+}
+
+.detail-sidebar-head span {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.detail-sidebar-section {
+  padding: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.detail-sidebar-section:last-child {
+  border-bottom: 0;
+}
+
+.detail-sidebar-section h3 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+.detail-block {
+  margin-bottom: 12px;
+}
+
+.detail-block:last-child {
+  margin-bottom: 0;
+}
+
+.detail-block span,
+.sidebar-price-row > span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.detail-block p {
+  margin: 0;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.sidebar-price-list {
+  display: grid;
+  gap: 10px;
+}
+
+.sidebar-price-row {
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
 }
 
 .empty-rows {
@@ -398,20 +614,19 @@ summary {
     grid-template-columns: 1fr 1fr;
   }
 
-  table {
-    table-layout: auto;
-    min-width: 820px;
+  .history-layout.has-detail {
+    grid-template-columns: 1fr;
   }
 
-  .table-wrap {
-    overflow-x: auto;
+  .detail-sidebar {
+    position: static;
+    max-height: none;
   }
 }
 
 @media (max-width: 560px) {
   .metrics,
-  .filters,
-  .detail-grid {
+  .filters {
     grid-template-columns: 1fr;
   }
 
