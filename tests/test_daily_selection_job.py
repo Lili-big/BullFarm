@@ -112,6 +112,8 @@ class DailySelectionJobTests(unittest.TestCase):
                     "--write-sql-dir",
                     "{supabase_sql_dir}",
                     "--sql-compact",
+                    "--env-file",
+                    str(self.project_root / "missing.env"),
                 ]
             ],
         }
@@ -210,6 +212,21 @@ class DailySelectionJobTests(unittest.TestCase):
         self.assertEqual(
             "20260626",
             daily.latest_complete_market_date("20260627", datetime(2026, 6, 27, 8, 30)),
+        )
+
+    def test_as_of_date_uses_trading_calendar_holiday(self) -> None:
+        (self.project_root / "config" / "trading_calendar.json").write_text(
+            json.dumps({"holidays": ["2026-06-26"]}),
+            encoding="utf-8",
+        )
+
+        self.assertEqual(
+            "20260625",
+            daily.latest_complete_market_date(
+                "20260626",
+                datetime(2026, 6, 26, 15, 30),
+                project_root=self.project_root,
+            ),
         )
 
     def test_missing_supabase_env_creates_sql_bundle_and_blocks_latest_until_finalize(self) -> None:

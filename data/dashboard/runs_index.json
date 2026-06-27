@@ -1,27 +1,27 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-26T15:32:18",
+  "generated_at": "2026-06-28T00:28:33",
   "latest_date": "20260625",
   "runs": [
     {
       "date": "20260625",
       "selection_date": "2026-06-25",
-      "run_id": "20260625_daily_v1_0",
-      "label": "2026-06-25 auto",
-      "market_env": "auto",
-      "total_selected_count": 51,
-      "top_score": 4,
-      "average_score": 4.0,
+      "run_id": "20260625_intraday_full_v1_0",
+      "label": "2026-06-25 intraday_tencent_range",
+      "market_env": "intraday_tencent_range",
+      "total_selected_count": 50,
+      "top_score": 80,
+      "average_score": 65.46,
       "score_buckets": {
-        "strong": 0,
-        "trial": 0,
-        "watch": 0,
-        "avoid": 51,
+        "strong": 1,
+        "trial": 33,
+        "watch": 14,
+        "avoid": 2,
         "unknown": 0
       },
       "has_review": false,
       "review_status": "missing_review",
-      "run_count": 2,
+      "run_count": 1,
       "json_path": "runs/20260625.json"
     },
     {
@@ -47,7 +47,7 @@
     }
   ],
   "strategy_effectiveness": {
-    "run_count": 4,
+    "run_count": 3,
     "reviewed_run_count": 2,
     "valid_stock_count": 50,
     "win_rate_t3": null,

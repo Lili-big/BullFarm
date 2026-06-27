@@ -47,19 +47,23 @@ live_fetch_defaults:
   quote_batch_size: 800
   include_bj: false
 daily_job:
-  config: config/daily_selection.json
+  job_type: daily_selection
+  config: config/local_selection_job.json
+  wrapper: backend.jobs.daily_selection
   script: skills/stock-selection-agent/scripts/run_daily_selection.py
   schedule:
     timezone: Asia/Shanghai
     local_time: "08:30"
+    automation: daily-full-selection
+    trading_days_only: true
     target_date_rule: previous_complete_trading_day
+    holiday_calendar: config/trading_calendar.json
   required_invocation:
     - python
-    - skills/stock-selection-agent/scripts/run_daily_selection.py
-    - --run-date
-    - YYYYMMDD
-    - --as-of-date
-    - YYYYMMDD
+    - -m
+    - backend.jobs.daily_selection
+    - --trigger-source
+    - codex_automation
   archive_pattern:
     snapshots: data/snapshots/YYYYMMDD
     outputs: outputs/daily/YYYYMMDD
@@ -67,13 +71,58 @@ daily_job:
     snapshots: data/snapshots/latest
     outputs: outputs/daily/latest
   failure_manifest: outputs/daily/YYYYMMDD/run_manifest.json
-  price_update: validate_selection_results.py update-prices --all --latest
-  dashboard_refresh: skills/stock-selection-agent/scripts/build_dashboard_data.py
   supabase_publication_gate:
     require_write: true
-    pending_bundle: outputs/daily/YYYYMMDD/supabase_sql/manifest.json
-    finalize_after_verification: run_daily_selection.py --finalize-run YYYYMMDD --verified-run-id RUN_ID
-cloud_deployment:
+    latest_publish_after_supabase_success: true
+price_refresh_job:
+  job_type: price_refresh
+  wrapper: backend.jobs.price_refresh
+  schedule:
+    timezone: Asia/Shanghai
+    local_time: "16:10"
+    automation: daily-price-refresh
+    trading_days_only: true
+    target_date_rule: previous_trading_day
+    holiday_calendar: config/trading_calendar.json
+  required_invocation:
+    - python
+    - -m
+    - backend.jobs.price_refresh
+    - --trigger-source
+    - codex_automation
+  workflow:
+    - validate_selection_results.py update-prices --all --latest
+    - validate_selection_results.py analyze --all
+    - sync_supabase.py --include-workbook-runs --fail-on-skip
+local_automation:
+  frontend:
+    platform: netlify
+    app_dir: frontend
+    build_command: npm run build
+    publish_dir: frontend/dist
+    data_source: Supabase public views
+    required_env:
+      - VITE_SUPABASE_URL
+      - VITE_SUPABASE_ANON_KEY
+  backend:
+    platform: local
+    package: backend
+    api: backend.api:app
+    execution_owner: local machine
+    trigger_owner: Codex automation
+    required_env:
+      - SUPABASE_URL
+      - SUPABASE_SERVICE_ROLE_KEY
+      - ADMIN_TRIGGER_TOKEN
+      - APP_TIMEZONE
+  database:
+    platform: supabase
+    public_views:
+      - dashboard_runs_index
+      - dashboard_runs
+    private_tables:
+      - stock_selection_job_runs
+legacy_cloud_deployment:
   frontend:
     platform: netlify
     app_dir: frontend
@@ -87,6 +136,7 @@ cloud_deployment:
     platform: render
     package: backend
     web_service: backend.api:app
+    status: legacy
     cron_schedule_utc: "30 0 * * *"
     cron_local_time: "08:30 Asia/Shanghai"
     required_env_group: stock-selection-env

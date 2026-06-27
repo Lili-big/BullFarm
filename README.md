@@ -1,53 +1,57 @@
 # 牧牛记
 
-牧牛记是一个规则型 A 股选股系统。当前项目已经从单机脚本重构为三层部署架构：Netlify 承载公开只读看板，Render 承载后端 API 与每日选股任务，Supabase 作为生产数据库和看板唯一数据源。
+牧牛记是一个规则型 A 股选股与复盘系统。当前主架构已经收束为：本机负责执行与写入，Supabase 负责生产数据存储，前端只读 Supabase，Codex 自动化只负责交易日定时唤醒和触发任务。
 
-核心选股算法仍保留在 `skills/stock-selection-agent/scripts/` 下，云端改造主要增加部署壳、任务状态、Supabase 写入和前端读取链路。
+核心选股算法仍保留在 `skills/stock-selection-agent/scripts/`。本次架构边界的重点是把它包装成稳定的本机任务，而不是重写选股逻辑。
 
 ## 架构
 
 ```mermaid
 flowchart LR
-  A["Render Cron<br/>每天 00:30 UTC"] --> B["backend.jobs.daily_selection"]
-  C["Render Web Service<br/>FastAPI"] --> B
-  B --> D["现有选股脚本<br/>fetch -> score -> sync"]
-  D --> E["Supabase<br/>事实表 + 公共视图"]
-  F["Netlify<br/>frontend/ Vite App"] --> E
+  A["Codex 自动化<br/>定时唤醒"] --> B["本机后端/API<br/>任务控制面"]
+  B --> C["本地选股流水线<br/>抓取 -> 评分 -> 价格更新"]
+  C --> D["Supabase<br/>事实表 + 公共视图"]
+  E["前端页面"] --> D
 ```
 
-- 前端：`frontend/`，Vite + React，部署到 Netlify。
-- 后端：`backend/`，FastAPI + Uvicorn，部署到 Render Web Service。
-- 定时任务：Render Cron Job，每天 UTC `00:30`，对应北京时间 `08:30`。
-- 数据库：Supabase，事实表由 `service_role` 写入，公共 dashboard 视图由 anon 只读访问。
-- 本地辅助：Excel 和 `data/dashboard/` 仍可用于开发、导出和回放，不再作为生产主数据源。
+- 前端：`frontend/`，Vite + React，生产环境只读取 Supabase 公共视图。
+- 本机后端：`backend/`，FastAPI + 本机 job wrapper，提供健康检查、手动触发、任务状态、重试和日志查询。
+- 定时触发：Codex 自动化负责交易日唤醒并触发本机任务；本机任务会用交易日配置兜底跳过休市日。
+- 数据库：Supabase。事实表只允许 `service_role` 写入，浏览器只使用 anon key 读取公共视图。
+- 本地辅助：Excel、`outputs/` 和 `data/dashboard/` 保留为开发、验证和回放资产，不再作为生产主数据源。
 
 ## 目录
 
-- `frontend/`：牧牛记看板，读取 Supabase 公共视图 `dashboard_runs_index` 和 `dashboard_runs`。
-- `backend/api.py`：Render Web Service 入口，提供健康检查、手动触发和任务状态查询。
-- `backend/jobs/daily_selection.py`：Render Cron 包装器，计算上一完整交易日并调用现有日任务。
-- `backend/jobs/supabase_price_update.py`：Supabase 价格和表现 upsert 辅助逻辑。
-- `skills/stock-selection-agent/scripts/`：原有选股、评分、验证、Supabase 同步脚本。
-- `config/daily_selection.json`：本地完整日任务配置，会更新本地 Excel、dashboard JSON 和 Supabase。
-- `config/render_daily_selection.json`：Render 生产任务配置，只执行抓取、评分和 Supabase 写入。
-- `supabase/migrations/`：Supabase 表、RLS、公共视图和任务状态表迁移。
-- `render.yaml`：Render Web Service + Cron Job Blueprint。
-- `netlify.toml`：Netlify 构建配置。
-- `docs/cloud_deployment.md`：云端部署细节。
+- `backend/api.py`：本机任务控制面 API。
+- `backend/jobs/daily_selection.py`：全量选股 job wrapper，调用既有每日选股脚本并写入 Supabase。
+- `backend/jobs/price_refresh.py`：价格刷新 job wrapper，更新历史入选股票最新价格和收益表现。
+- `backend/supabase_jobs.py`：`stock_selection_job_runs` 状态写入、查询和本地 fallback。
+- `config/local_selection_job.json`：本机全量选股生产配置。
+- `config/trading_calendar.json`：A 股交易日配置，支持休市日和补充开市日。
+- `config/daily_selection.json`：开发完整流水线配置，可生成本地 Excel 和 dashboard JSON。
+- `config/render_daily_selection.json`：历史 Render 配置，已降级为 legacy。
+- `frontend/`：只读 Supabase 公共视图的看板。
+- `supabase/migrations/`：事实表、RLS、公共视图和本机 job 状态表迁移。
+- `docs/local_automation_architecture.md`：本机自动化架构说明。
+- `docs/cloud_deployment.md`：历史 Netlify + Render + Supabase 部署说明，仅作 legacy 参考。
 
 ## 数据链路
 
-1. Render Cron 在北京时间 08:30 触发。
-2. `backend.jobs.daily_selection` 计算上一完整交易日作为 `run_date` 和 `as_of_date`。
-3. 现有脚本抓取 Tencent 行情和前复权 K 线，生成候选池。
-4. 评分脚本输出 `selection_scores.csv` 和 Markdown 报告。
-5. `sync_supabase.py` 将 run、results、prices、performance 结构化写入 Supabase。
-6. Supabase 公共视图聚合出 dashboard 所需日期、核心指标和明细 payload。
-7. Netlify 前端只用 anon key 读取公共视图并展示。
+1. Codex 自动化在交易日北京时间 08:30 触发 `daily-full-selection`。
+2. 本机 job 计算上一完整交易日，抓取 Tencent 行情和前复权 K 线，生成候选池。
+3. 评分脚本输出 `selection_scores.csv` 和 Markdown 报告。
+4. `sync_supabase.py` 使用本机 `SUPABASE_SERVICE_ROLE_KEY` 将 run、results 写入 Supabase。
+5. Codex 自动化在交易日北京时间 16:10 触发 `daily-price-refresh`。
+6. 价格刷新 job 固定以上一交易日作为复盘日期，更新历史入选股票的最新价格、T1/T2/T3 等表现，并同步 `prices/performance`。
+7. 前端页面使用 anon key 读取 `dashboard_runs_index`、`dashboard_runs` 和 `v_selection_*` 公共视图。
+
+## 交易日配置
+
+`config/trading_calendar.json` 默认按周一到周五作为交易日。遇到官方休市日时，把日期写入 `holidays`；如果有需要强制视为开市的日期，写入 `makeup_trading_days`。定时任务在非交易日被唤醒时会记录 `result_payload.skipped=true` 并退出，不启动选股或复盘流水线。
 
 ## 环境变量
 
-本地开发可复制模板：
+本机复制模板：
 
 ```powershell
 Copy-Item .\config\local.env.example .\config\local.env
@@ -65,23 +69,19 @@ APP_TIMEZONE=Asia/Shanghai
 
 `config/local.env` 已被 git 忽略，不能提交。
 
-Render 环境变量：
+前端只允许公开读取配置：
 
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `ADMIN_TRIGGER_TOKEN`
-- `APP_TIMEZONE=Asia/Shanghai`
+```text
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+VITE_DASHBOARD_RUNS_INDEX_VIEW=dashboard_runs_index
+VITE_DASHBOARD_RUN_DETAIL_VIEW=dashboard_runs
+VITE_ENABLE_LOCAL_FALLBACK=false
+```
 
-Netlify 环境变量：
+不要把 `SUPABASE_SERVICE_ROLE_KEY` 放进 Netlify、`frontend/` 或任何浏览器可见文件。
 
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
-- `VITE_DASHBOARD_RUNS_INDEX_VIEW=dashboard_runs_index`
-- `VITE_DASHBOARD_RUN_DETAIL_VIEW=dashboard_runs`
-
-不要把 `SUPABASE_SERVICE_ROLE_KEY` 放进 Netlify 或任何前端文件。
-
-## 本地运行
+## 本机运行
 
 安装 Python 依赖：
 
@@ -95,84 +95,45 @@ python -m pip install -r .\requirements.txt
 npm.cmd --prefix frontend install
 ```
 
-运行一次前端构建：
-
-```powershell
-npm.cmd --prefix frontend run build
-```
-
-本地预览前端：
-
-```powershell
-npm.cmd --prefix frontend run dev
-```
-
-## 选股与同步
-
-本地执行完整日任务：
-
-```powershell
-python .\skills\stock-selection-agent\scripts\run_daily_selection.py `
-  --run-date 20260625 `
-  --as-of-date 20260625
-```
-
-Render dry-run 计划检查：
+本机全量选股 dry-run：
 
 ```powershell
 python -m backend.jobs.daily_selection --dry-run --trigger-source local
 ```
 
-单独把当前结果同步到 Supabase：
+本机价格刷新 dry-run：
 
 ```powershell
-python .\skills\stock-selection-agent\scripts\sync_supabase.py `
-  --run-id 20260625_daily_v1_0 `
-  --selection-date 20260625 `
-  --scores .\outputs\selection_scores_20260625.csv `
-  --candidates .\data\snapshots\20260625_tencent_range_candidates.csv `
-  --metadata .\data\snapshots\20260625_tencent_range_fetch_meta.json `
-  --report .\outputs\selection_report_20260625.md
+python -m backend.jobs.price_refresh --dry-run --trigger-source local
 ```
 
-安全 dry-run：
+启动本机 API：
 
 ```powershell
-python .\skills\stock-selection-agent\scripts\sync_supabase.py --dry-run --print-payload
+uvicorn backend.api:app --host 127.0.0.1 --port 8000
 ```
 
-## Render 部署
+手动触发全量选股：
 
-Web Service：
-
-- Build Command: `pip install -r requirements.txt`
-- Start Command: `uvicorn backend.api:app --host 0.0.0.0 --port $PORT`
-- Root Directory: 留空
-
-Cron Job：
-
-- Schedule: `30 0 * * *`
-- Command: `python -m backend.jobs.daily_selection --trigger-source cron`
-
-受保护手动触发：
-
-```bash
-curl -X POST "$RENDER_API_URL/jobs/daily-selection" \
-  -H "Authorization: Bearer $ADMIN_TRIGGER_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"dry_run": true}'
+```powershell
+curl -X POST "http://127.0.0.1:8000/jobs/daily-selection" `
+  -H "Authorization: Bearer $env:ADMIN_TRIGGER_TOKEN" `
+  -H "Content-Type: application/json" `
+  -d "{\"dry_run\": true}"
 ```
 
-查询任务状态：
+手动触发价格刷新：
 
-```bash
-curl "$RENDER_API_URL/jobs/<job_id>" \
-  -H "Authorization: Bearer $ADMIN_TRIGGER_TOKEN"
+```powershell
+curl -X POST "http://127.0.0.1:8000/jobs/price-refresh" `
+  -H "Authorization: Bearer $env:ADMIN_TRIGGER_TOKEN" `
+  -H "Content-Type: application/json" `
+  -d "{\"dry_run\": true}"
 ```
 
 ## Supabase
 
-迁移文件在 `supabase/migrations/`：
+核心对象：
 
 - `stock_selection_runs`
 - `stock_selection_results`
@@ -183,7 +144,7 @@ curl "$RENDER_API_URL/jobs/<job_id>" \
 
 访问模型：
 
-- `service_role`：写入事实表、价格、表现和任务状态。
+- `service_role`：写入事实表、价格、表现和 job 状态。
 - `anon` / `authenticated`：只读 dashboard/public views。
 - `stock_selection_job_runs`：只允许 `service_role` 访问。
 
@@ -195,13 +156,13 @@ curl "$RENDER_API_URL/jobs/<job_id>" \
 python -m unittest discover -s tests -v
 ```
 
-云端重构相关测试：
+本机重构契约测试：
 
 ```powershell
 python -m unittest tests.test_cloud_refactor_contract -v
 ```
 
-前端构建检查：
+前端构建：
 
 ```powershell
 npm.cmd --prefix frontend run build

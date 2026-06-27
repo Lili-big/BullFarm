@@ -277,6 +277,41 @@ summary {
   margin-bottom: 2px;
 }
 
+.muted {
+  color: var(--muted);
+}
+
+.price-points-panel {
+  grid-column: 1 / -1;
+}
+
+.price-points-table {
+  margin-top: 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.price-points-table table {
+  table-layout: auto;
+}
+
+.price-points-table th,
+.price-points-table td {
+  padding: 7px 9px;
+  font-size: 12px;
+}
+
+.pct.good {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.pct.bad {
+  color: var(--red);
+  font-weight: 700;
+}
+
 .chip {
   display: inline-flex;
   max-width: 100%;

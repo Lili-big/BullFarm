@@ -123,6 +123,18 @@ function formatPct(value) {
   return `${number.toFixed(2)}%`;
 }
 
+function formatSignedPct(value) {
+  if (value === null || value === undefined || value === "") {
+    return "-";
+  }
+  const number = Number(value);
+  if (!Number.isFinite(number)) {
+    return "-";
+  }
+  const sign = number > 0 ? "+" : "";
+  return `${sign}${number.toFixed(2)}%`;
+}
+
 function reviewLabel(status) {
   const map = {
     ready: "复盘完成",
@@ -145,6 +157,14 @@ function chipTone(value) {
     return "warn";
   }
   return "";
+}
+
+function pctTone(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number === 0) {
+    return "";
+  }
+  return number > 0 ? "good" : "bad";
 }
 
 function scoreWidth(score) {
@@ -171,6 +191,48 @@ function EmptyState({ title, message }) {
       <strong>{title}</strong>
       <p>{message}</p>
     </section>
+  );
+}
+
+function PricePoints({ points }) {
+  const rows = Array.isArray(points) ? points : [];
+  const labels = {
+    title: "\u540e\u7eed\u4ef7\u683c",
+    date: "\u65e5\u671f",
+    close: "\u6536\u76d8\u4ef7",
+    change: "\u6da8\u8dcc\u5e45",
+    empty: "\u6682\u65e0\u540e\u7eed\u4ef7\u683c",
+  };
+  return (
+    <div className="price-points-panel">
+      <strong>{labels.title}</strong>
+      {rows.length ? (
+        <div className="price-points-table">
+          <table>
+            <thead>
+              <tr>
+                <th>T+</th>
+                <th>{labels.date}</th>
+                <th>{labels.close}</th>
+                <th>{labels.change}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((point, index) => (
+                <tr key={`${point.trading_day_offset || "offset"}-${point.price_date || index}`}>
+                  <td>{formatValue(point.trading_day_offset)}</td>
+                  <td>{formatValue(point.price_date)}</td>
+                  <td>{formatValue(point.close)}</td>
+                  <td><span className={`pct ${pctTone(point.return_pct)}`}>{formatSignedPct(point.return_pct)}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <span className="muted">{labels.empty}</span>
+      )}
+    </div>
   );
 }
 
@@ -403,6 +465,7 @@ export default function App() {
                               <br />
                               T1 {formatPct(reviewData.returns?.return_t1_close_pct)} / T2 {formatPct(reviewData.returns?.return_t2_close_pct)} / T3 {formatPct(reviewData.returns?.return_t3_close_pct)}
                             </div>
+                            <PricePoints points={reviewData.price_points} />
                           </div>
                         </details>
                       </td>

@@ -187,6 +187,84 @@ class DashboardDataContractTests(unittest.TestCase):
         )
         self.write_sheet(
             workbook,
+            "future_prices",
+            [
+                {
+                    "run_id": "20260624_reviewed_v1_0",
+                    "selection_date": "2026-06-24",
+                    "stock_code": "300001.SZ",
+                    "stock_name": "????",
+                    "trading_day_offset": "T1",
+                    "price_date": "2026-06-25",
+                    "open": 10.1,
+                    "high": 10.4,
+                    "low": 10.0,
+                    "close": 10.2,
+                    "volume": 100000,
+                    "amount": 1020000,
+                    "turnover_rate": 2.1,
+                    "is_suspended": False,
+                    "data_source": "unit",
+                    "updated_at": "2026-06-25 16:00:00",
+                },
+                {
+                    "run_id": "20260624_reviewed_v1_0",
+                    "selection_date": "2026-06-24",
+                    "stock_code": "300001.SZ",
+                    "stock_name": "????",
+                    "trading_day_offset": "T2",
+                    "price_date": "2026-06-26",
+                    "open": 10.3,
+                    "high": 10.6,
+                    "low": 10.2,
+                    "close": 10.4,
+                    "volume": 100000,
+                    "amount": 1040000,
+                    "turnover_rate": 2.2,
+                    "is_suspended": False,
+                    "data_source": "unit",
+                    "updated_at": "2026-06-26 16:00:00",
+                },
+                {
+                    "run_id": "20260624_reviewed_v1_0",
+                    "selection_date": "2026-06-24",
+                    "stock_code": "300001.SZ",
+                    "stock_name": "????",
+                    "trading_day_offset": "T3",
+                    "price_date": "2026-06-29",
+                    "open": 10.5,
+                    "high": 10.9,
+                    "low": 10.4,
+                    "close": 10.8,
+                    "volume": 100000,
+                    "amount": 1080000,
+                    "turnover_rate": 2.3,
+                    "is_suspended": False,
+                    "data_source": "unit",
+                    "updated_at": "2026-06-29 16:00:00",
+                },
+                {
+                    "run_id": "20260624_reviewed_v1_0",
+                    "selection_date": "2026-06-24",
+                    "stock_code": "600002.SH",
+                    "stock_name": "????",
+                    "trading_day_offset": "T1",
+                    "price_date": "2026-06-25",
+                    "open": 19.9,
+                    "high": 20.1,
+                    "low": 19.7,
+                    "close": 19.8,
+                    "volume": 100000,
+                    "amount": 1980000,
+                    "turnover_rate": 1.2,
+                    "is_suspended": False,
+                    "data_source": "unit",
+                    "updated_at": "2026-06-25 16:00:00",
+                },
+            ],
+        )
+        self.write_sheet(
+            workbook,
             "summary_by_run",
             [
                 {
@@ -263,6 +341,12 @@ class DashboardDataContractTests(unittest.TestCase):
         self.assertEqual({"value": "AI应用", "count": 1}, reviewed["filters"]["sectors"][0])
         self.assertEqual("300001", reviewed["picks"][0]["symbol"])
         self.assertEqual(8, reviewed["picks"][0]["review"]["returns"]["return_t3_close_pct"])
+        price_points = reviewed["picks"][0]["review"]["price_points"]
+        self.assertEqual(["T1", "T2", "T3"], [row["trading_day_offset"] for row in price_points])
+        self.assertEqual("2026-06-25", price_points[0]["price_date"])
+        self.assertEqual(10.2, price_points[0]["close"])
+        self.assertEqual(2.0, price_points[0]["return_pct"])
+        self.assertEqual(8.0, price_points[2]["return_pct"])
         self.assertEqual(1, reviewed["strategy_effectiveness"]["reviewed_run_count"])
         self.assertEqual(2, reviewed["strategy_effectiveness"]["valid_stock_count"])
         self.assertEqual(1.5, reviewed["strategy_effectiveness"]["avg_return_t3_pct"])
@@ -274,18 +358,13 @@ class DashboardDataContractTests(unittest.TestCase):
         self.assertEqual(81, missing["metrics"]["top_score"])
         self.assertEqual("正向验证", missing["strategy_effectiveness"]["conclusion"])
 
-    def test_dashboard_page_is_static_and_has_supabase_fallback(self) -> None:
-        html = (ROOT / "dashboard" / "index.html").read_text(encoding="utf-8")
+    def test_react_frontend_serves_local_dashboard_data_in_dev(self) -> None:
+        config = (ROOT / "frontend" / "vite.config.js").read_text(encoding="utf-8")
 
-        self.assertIn("supabaseUrl", html)
-        self.assertIn("localIndexUrl", html)
-        self.assertIn("falling back to local JSON", html)
-        self.assertNotIn('src="http', html)
-        self.assertNotIn('href="http', html)
-
-        config = (ROOT / "dashboard" / "supabase-config.js").read_text(encoding="utf-8")
-        self.assertIn("https://jjexafphsjzvutstwroz.supabase.co", config)
-        self.assertNotIn("/rest/v1/", config)
+        self.assertIn("local-dashboard-data", config)
+        self.assertIn("/data/dashboard/", config)
+        self.assertIn("dashboardDataRoot", config)
+        self.assertIn("@vitejs/plugin-react", config)
         self.assertNotIn("service_role", config.lower())
 
 

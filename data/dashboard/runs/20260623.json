@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-26T15:32:18",
+  "generated_at": "2026-06-28T00:28:33",
   "date": "20260623",
   "selection_date": "2026-06-23",
   "active_run_id": "20260623_tencent_range_v1_0",
@@ -71,7 +71,7 @@
     }
   },
   "strategy_effectiveness": {
-    "run_count": 4,
+    "run_count": 3,
     "reviewed_run_count": 2,
     "valid_stock_count": 50,
     "win_rate_t3": null,
@@ -201,6 +201,14 @@
         },
         "latest_price": 580.0,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 580.0,
+            "return_pct": 1.65
+          }
+        ],
         "max_gain_3d_pct": 4.1,
         "max_drawdown_3d_pct": -3.05,
         "hit_stop_loss": true,
@@ -245,6 +253,14 @@
         },
         "latest_price": 76.78,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 76.78,
+            "return_pct": 3.62
+          }
+        ],
         "max_gain_3d_pct": 3.9,
         "max_drawdown_3d_pct": -1.48,
         "hit_stop_loss": false,
@@ -289,6 +305,14 @@
         },
         "latest_price": 61.91,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 61.91,
+            "return_pct": 0.29
+          }
+        ],
         "max_gain_3d_pct": 3.66,
         "max_drawdown_3d_pct": -3.13,
         "hit_stop_loss": true,
@@ -333,6 +357,14 @@
         },
         "latest_price": 21.81,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 21.81,
+            "return_pct": 9.98
+          }
+        ],
         "max_gain_3d_pct": 9.98,
         "max_drawdown_3d_pct": -2.67,
         "hit_stop_loss": false,
@@ -377,6 +409,14 @@
         },
         "latest_price": 119.02,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 119.02,
+            "return_pct": 1.46
+          }
+        ],
         "max_gain_3d_pct": 2.76,
         "max_drawdown_3d_pct": -3.11,
         "hit_stop_loss": true,
@@ -421,6 +461,14 @@
         },
         "latest_price": 83.03,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 83.03,
+            "return_pct": -2.81
+          }
+        ],
         "max_gain_3d_pct": 0.63,
         "max_drawdown_3d_pct": -4.97,
         "hit_stop_loss": true,
@@ -465,6 +513,14 @@
         },
         "latest_price": 64.82,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 64.82,
+            "return_pct": 9.99
+          }
+        ],
         "max_gain_3d_pct": 9.99,
         "max_drawdown_3d_pct": -2.0,
         "hit_stop_loss": false,
@@ -509,6 +565,14 @@
         },
         "latest_price": 82.26,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 82.26,
+            "return_pct": -0.59
+          }
+        ],
         "max_gain_3d_pct": 2.37,
         "max_drawdown_3d_pct": -4.35,
         "hit_stop_loss": true,
@@ -553,6 +617,14 @@
         },
         "latest_price": 705.09,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 705.09,
+            "return_pct": 10.0
+          }
+        ],
         "max_gain_3d_pct": 10.0,
         "max_drawdown_3d_pct": -1.57,
         "hit_stop_loss": false,
@@ -597,6 +669,14 @@
         },
         "latest_price": 27.89,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 27.89,
+            "return_pct": -1.52
+          }
+        ],
         "max_gain_3d_pct": 1.69,
         "max_drawdown_3d_pct": -2.19,
         "hit_stop_loss": false,
@@ -641,6 +721,14 @@
         },
         "latest_price": 74.64,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 74.64,
+            "return_pct": 9.09
+          }
+        ],
         "max_gain_3d_pct": 9.37,
         "max_drawdown_3d_pct": -0.32,
         "hit_stop_loss": false,
@@ -685,6 +773,14 @@
         },
         "latest_price": 197.8,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 197.8,
+            "return_pct": 1.96
+          }
+        ],
         "max_gain_3d_pct": 2.58,
         "max_drawdown_3d_pct": -3.72,
         "hit_stop_loss": true,
@@ -729,6 +825,14 @@
         },
         "latest_price": 177.3,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 177.3,
+            "return_pct": 5.62
+          }
+        ],
         "max_gain_3d_pct": 6.86,
         "max_drawdown_3d_pct": -0.52,
         "hit_stop_loss": false,
@@ -773,6 +877,14 @@
         },
         "latest_price": 94.7,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 94.7,
+            "return_pct": 10.0
+          }
+        ],
         "max_gain_3d_pct": 10.0,
         "max_drawdown_3d_pct": -2.43,
         "hit_stop_loss": false,
@@ -817,6 +929,14 @@
         },
         "latest_price": 100.08,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 100.08,
+            "return_pct": -2.36
+          }
+        ],
         "max_gain_3d_pct": -0.53,
         "max_drawdown_3d_pct": -7.52,
         "hit_stop_loss": true,
@@ -861,6 +981,14 @@
         },
         "latest_price": 7.07,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 7.07,
+            "return_pct": 4.43
+          }
+        ],
         "max_gain_3d_pct": 5.61,
         "max_drawdown_3d_pct": -2.95,
         "hit_stop_loss": false,
@@ -905,6 +1033,14 @@
         },
         "latest_price": 44.25,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 44.25,
+            "return_pct": 5.86
+          }
+        ],
         "max_gain_3d_pct": 6.58,
         "max_drawdown_3d_pct": -4.78,
         "hit_stop_loss": true,
@@ -949,6 +1085,14 @@
         },
         "latest_price": 123.09,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 123.09,
+            "return_pct": 10.0
+          }
+        ],
         "max_gain_3d_pct": 10.0,
         "max_drawdown_3d_pct": -5.26,
         "hit_stop_loss": true,
@@ -993,6 +1137,14 @@
         },
         "latest_price": 52.92,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 52.92,
+            "return_pct": -0.75
+          }
+        ],
         "max_gain_3d_pct": 1.2,
         "max_drawdown_3d_pct": -5.5,
         "hit_stop_loss": true,
@@ -1037,6 +1189,14 @@
         },
         "latest_price": 383.0,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 383.0,
+            "return_pct": 3.03
+          }
+        ],
         "max_gain_3d_pct": 6.26,
         "max_drawdown_3d_pct": -3.34,
         "hit_stop_loss": true,
@@ -1081,6 +1241,14 @@
         },
         "latest_price": 1453.0,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 1453.0,
+            "return_pct": 2.83
+          }
+        ],
         "max_gain_3d_pct": 3.95,
         "max_drawdown_3d_pct": -2.48,
         "hit_stop_loss": false,
@@ -1125,6 +1293,14 @@
         },
         "latest_price": 810.0,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 810.0,
+            "return_pct": 7.28
+          }
+        ],
         "max_gain_3d_pct": 8.19,
         "max_drawdown_3d_pct": -1.52,
         "hit_stop_loss": false,
@@ -1169,6 +1345,14 @@
         },
         "latest_price": 307.35,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 307.35,
+            "return_pct": 10.0
+          }
+        ],
         "max_gain_3d_pct": 12.61,
         "max_drawdown_3d_pct": -2.41,
         "hit_stop_loss": false,
@@ -1213,6 +1397,20 @@
         },
         "latest_price": 155.46,
         "latest_price_date": "2026-06-25",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 151.53,
+            "return_pct": 6.94
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 155.46,
+            "return_pct": 9.71
+          }
+        ],
         "max_gain_3d_pct": 11.5,
         "max_drawdown_3d_pct": -0.27,
         "hit_stop_loss": false,
@@ -1257,6 +1455,14 @@
         },
         "latest_price": 240.2,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 240.2,
+            "return_pct": -3.69
+          }
+        ],
         "max_gain_3d_pct": -0.3,
         "max_drawdown_3d_pct": -4.97,
         "hit_stop_loss": true,
@@ -1301,6 +1507,14 @@
         },
         "latest_price": 18.98,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 18.98,
+            "return_pct": -2.62
+          }
+        ],
         "max_gain_3d_pct": -1.03,
         "max_drawdown_3d_pct": -5.7,
         "hit_stop_loss": true,
@@ -1345,6 +1559,14 @@
         },
         "latest_price": 337.1,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 337.1,
+            "return_pct": 6.34
+          }
+        ],
         "max_gain_3d_pct": 7.89,
         "max_drawdown_3d_pct": -2.21,
         "hit_stop_loss": false,
@@ -1389,6 +1611,14 @@
         },
         "latest_price": 257.13,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 257.13,
+            "return_pct": 0.83
+          }
+        ],
         "max_gain_3d_pct": 2.33,
         "max_drawdown_3d_pct": -1.18,
         "hit_stop_loss": false,
@@ -1433,6 +1663,14 @@
         },
         "latest_price": 50.23,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 50.23,
+            "return_pct": 3.57
+          }
+        ],
         "max_gain_3d_pct": 6.41,
         "max_drawdown_3d_pct": -0.41,
         "hit_stop_loss": false,
@@ -1477,6 +1715,14 @@
         },
         "latest_price": 143.35,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 143.35,
+            "return_pct": 3.5
+          }
+        ],
         "max_gain_3d_pct": 4.68,
         "max_drawdown_3d_pct": -0.62,
         "hit_stop_loss": false,
@@ -1521,6 +1767,14 @@
         },
         "latest_price": 555.3,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 555.3,
+            "return_pct": 0.6
+          }
+        ],
         "max_gain_3d_pct": 4.07,
         "max_drawdown_3d_pct": -1.09,
         "hit_stop_loss": false,
@@ -1565,6 +1819,14 @@
         },
         "latest_price": 340.19,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 340.19,
+            "return_pct": 10.99
+          }
+        ],
         "max_gain_3d_pct": 12.56,
         "max_drawdown_3d_pct": -0.49,
         "hit_stop_loss": false,
@@ -1609,6 +1871,14 @@
         },
         "latest_price": 619.98,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 619.98,
+            "return_pct": 4.02
+          }
+        ],
         "max_gain_3d_pct": 4.02,
         "max_drawdown_3d_pct": -2.85,
         "hit_stop_loss": false,
@@ -1653,6 +1923,14 @@
         },
         "latest_price": 152.23,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 152.23,
+            "return_pct": 4.91
+          }
+        ],
         "max_gain_3d_pct": 8.7,
         "max_drawdown_3d_pct": -6.97,
         "hit_stop_loss": true,
@@ -1697,6 +1975,14 @@
         },
         "latest_price": 266.36,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 266.36,
+            "return_pct": -0.2
+          }
+        ],
         "max_gain_3d_pct": 2.08,
         "max_drawdown_3d_pct": -2.59,
         "hit_stop_loss": false,
@@ -1741,6 +2027,14 @@
         },
         "latest_price": 1838.0,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 1838.0,
+            "return_pct": 1.08
+          }
+        ],
         "max_gain_3d_pct": 2.78,
         "max_drawdown_3d_pct": -2.15,
         "hit_stop_loss": false,
@@ -1785,6 +2079,14 @@
         },
         "latest_price": 417.0,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 417.0,
+            "return_pct": 7.07
+          }
+        ],
         "max_gain_3d_pct": 7.53,
         "max_drawdown_3d_pct": -2.72,
         "hit_stop_loss": false,
@@ -1829,6 +2131,14 @@
         },
         "latest_price": 167.89,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 167.89,
+            "return_pct": 2.58
+          }
+        ],
         "max_gain_3d_pct": 2.65,
         "max_drawdown_3d_pct": -1.44,
         "hit_stop_loss": false,
@@ -1873,6 +2183,14 @@
         },
         "latest_price": 1312.18,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 1312.18,
+            "return_pct": 0.17
+          }
+        ],
         "max_gain_3d_pct": 2.66,
         "max_drawdown_3d_pct": -2.13,
         "hit_stop_loss": false,
@@ -1917,6 +2235,14 @@
         },
         "latest_price": 82.86,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 82.86,
+            "return_pct": 1.69
+          }
+        ],
         "max_gain_3d_pct": 2.55,
         "max_drawdown_3d_pct": -5.65,
         "hit_stop_loss": true,
@@ -1961,6 +2287,14 @@
         },
         "latest_price": 49.23,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 49.23,
+            "return_pct": -1.44
+          }
+        ],
         "max_gain_3d_pct": 0.34,
         "max_drawdown_3d_pct": -3.84,
         "hit_stop_loss": true,
@@ -2005,6 +2339,14 @@
         },
         "latest_price": 266.49,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 266.49,
+            "return_pct": 3.29
+          }
+        ],
         "max_gain_3d_pct": 3.29,
         "max_drawdown_3d_pct": -1.68,
         "hit_stop_loss": false,
@@ -2049,6 +2391,14 @@
         },
         "latest_price": 145.26,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 145.26,
+            "return_pct": -0.16
+          }
+        ],
         "max_gain_3d_pct": 3.25,
         "max_drawdown_3d_pct": -2.27,
         "hit_stop_loss": false,
@@ -2093,6 +2443,14 @@
         },
         "latest_price": 91.72,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 91.72,
+            "return_pct": 1.04
+          }
+        ],
         "max_gain_3d_pct": 4.23,
         "max_drawdown_3d_pct": -2.51,
         "hit_stop_loss": false,
@@ -2137,6 +2495,14 @@
         },
         "latest_price": 289.6,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 289.6,
+            "return_pct": 2.15
+          }
+        ],
         "max_gain_3d_pct": 3.94,
         "max_drawdown_3d_pct": -2.3,
         "hit_stop_loss": false,
@@ -2181,6 +2547,14 @@
         },
         "latest_price": 325.28,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 325.28,
+            "return_pct": 4.57
+          }
+        ],
         "max_gain_3d_pct": 4.8,
         "max_drawdown_3d_pct": -1.63,
         "hit_stop_loss": false,
@@ -2225,6 +2599,14 @@
         },
         "latest_price": 20.18,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 20.18,
+            "return_pct": -3.44
+          }
+        ],
         "max_gain_3d_pct": 1.63,
         "max_drawdown_3d_pct": -3.83,
         "hit_stop_loss": true,
@@ -2269,6 +2651,14 @@
         },
         "latest_price": 75.05,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 75.05,
+            "return_pct": 8.2
+          }
+        ],
         "max_gain_3d_pct": 10.01,
         "max_drawdown_3d_pct": -4.18,
         "hit_stop_loss": true,
@@ -2313,6 +2703,14 @@
         },
         "latest_price": 343.43,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 343.43,
+            "return_pct": 1.55
+          }
+        ],
         "max_gain_3d_pct": 2.09,
         "max_drawdown_3d_pct": -2.09,
         "hit_stop_loss": false,
@@ -2357,6 +2755,14 @@
         },
         "latest_price": 395.36,
         "latest_price_date": "2026-06-24",
+        "price_points": [
+          {
+            "trading_day_offset": "T1",
+            "price_date": "2026-06-24",
+            "close": 395.36,
+            "return_pct": 0.73
+          }
+        ],
         "max_gain_3d_pct": 1.72,
         "max_drawdown_3d_pct": -1.49,
         "hit_stop_loss": false,

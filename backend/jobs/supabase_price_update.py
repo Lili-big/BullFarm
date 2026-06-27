@@ -40,7 +40,7 @@ def build_latest_price_rows(
     selections: list[dict[str, Any]],
     quote_by_code: dict[str, dict[str, Any]],
     *,
-    data_source: str = "render_supabase_price_update",
+    data_source: str = "local_supabase_price_update",
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     updated_at = datetime.now().isoformat(timespec="seconds")

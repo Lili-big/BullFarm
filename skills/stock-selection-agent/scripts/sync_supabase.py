@@ -885,10 +885,14 @@ def execute_sync(payload: SyncPayload, dry_run: bool, env: dict[str, str] | None
         return summary
     try:
         from supabase import create_client
-    except ModuleNotFoundError:
-        summary.update({"status": "skipped", "reason": "supabase package is not installed"})
-        return summary
-    client = create_client(env["SUPABASE_URL"], env["SUPABASE_SERVICE_ROLE_KEY"])
+        client = create_client(env["SUPABASE_URL"], env["SUPABASE_SERVICE_ROLE_KEY"])
+    except (ImportError, ModuleNotFoundError, AttributeError):
+        try:
+            from backend.supabase_jobs import RestSupabaseClient
+        except ModuleNotFoundError:
+            summary.update({"status": "skipped", "reason": "Supabase client fallback is unavailable"})
+            return summary
+        client = RestSupabaseClient(env["SUPABASE_URL"], env["SUPABASE_SERVICE_ROLE_KEY"])
     written: dict[str, int] = {}
     for table in TABLE_ORDER:
         rows = payload.table_payloads()[table]

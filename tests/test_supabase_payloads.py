@@ -380,6 +380,8 @@ class SupabasePayloadTests(unittest.TestCase):
         self.assertIn("security_invoker", sql)
         self.assertIn("create or replace view public.dashboard_runs_index", sql)
         self.assertIn("create or replace view public.dashboard_runs", sql)
+        self.assertIn("price_points", sql)
+        self.assertIn("stock_selection_prices pr", sql)
         self.assertIn("create or replace view public.v_selection_runs_public", sql)
         self.assertIn("create or replace view public.v_selection_results_public", sql)
         self.assertIn("create or replace view public.v_selection_performance_public", sql)

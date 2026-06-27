@@ -26,6 +26,8 @@ RETURN_FIELDS = [
     "return_t10_close_pct",
 ]
 
+LATEST_OFFSET_RANK = 999999
+
 
 def now_iso() -> str:
     return datetime.now().replace(microsecond=0).isoformat()
@@ -80,6 +82,14 @@ def rounded(value: Any, digits: int = 2) -> float | None:
     if number is None:
         return None
     return round(number, digits)
+
+
+def pct_change(close_price: Any, base_price: Any) -> float | None:
+    close = as_float(close_price)
+    base = as_float(base_price)
+    if close is None or base in {None, 0}:
+        return None
+    return rounded((close - base) / base * 100)
 
 
 def compact_number(value: Any) -> int | float | None:
@@ -181,6 +191,16 @@ def group_by(rows: Iterable[dict[str, Any]], key: str) -> dict[str, list[dict[st
     return grouped
 
 
+def offset_sort_key(value: Any) -> int:
+    text = clean_text(value).upper()
+    if text == "LATEST":
+        return LATEST_OFFSET_RANK
+    match = re.search(r"(\d+)", text)
+    if match:
+        return int(match.group(1))
+    return LATEST_OFFSET_RANK - 1
+
+
 def first_present(row: dict[str, Any], *keys: str) -> str:
     for key in keys:
         value = clean_text(row.get(key))
@@ -225,7 +245,38 @@ def discover_score_files(scores_dir: Path, referenced_paths: set[Path]) -> list[
     return result
 
 
-def review_from_performance(row: dict[str, Any] | None) -> dict[str, Any]:
+def build_price_points(price_rows: Iterable[dict[str, Any]], base_price: Any) -> list[dict[str, Any]]:
+    points: list[dict[str, Any]] = []
+    for row in price_rows:
+        close = rounded(row.get("close"), 4)
+        price_date = clean_text(row.get("price_date"))
+        offset = clean_text(row.get("trading_day_offset"))
+        if offset.upper() in {"T0", "0"}:
+            continue
+        if close is None and not price_date:
+            continue
+        points.append(
+            {
+                "trading_day_offset": offset,
+                "price_date": price_date,
+                "close": close,
+                "return_pct": pct_change(close, base_price),
+            }
+        )
+    return sorted(
+        points,
+        key=lambda point: (
+            clean_text(point.get("price_date")),
+            offset_sort_key(point.get("trading_day_offset")),
+        ),
+    )
+
+
+def review_from_performance(
+    row: dict[str, Any] | None,
+    price_points: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    points = price_points or []
     if not row:
         return {
             "status": "missing_review",
@@ -233,6 +284,7 @@ def review_from_performance(row: dict[str, Any] | None) -> dict[str, Any]:
             "returns": {},
             "latest_price": None,
             "latest_price_date": "",
+            "price_points": points,
             "failure_reason": "",
             "data_status": "",
         }
@@ -245,6 +297,7 @@ def review_from_performance(row: dict[str, Any] | None) -> dict[str, Any]:
         "returns": returns,
         "latest_price": rounded(row.get("latest_price"), 4),
         "latest_price_date": clean_text(row.get("latest_price_date")),
+        "price_points": points,
         "max_gain_3d_pct": rounded(row.get("max_gain_3d_pct")),
         "max_drawdown_3d_pct": rounded(row.get("max_drawdown_3d_pct")),
         "hit_stop_loss": as_bool(row.get("hit_stop_loss")),
@@ -284,9 +337,16 @@ def build_pick_from_score(row: dict[str, Any], rank: int, performance: dict[str,
     }
 
 
-def build_pick_from_selected(row: dict[str, Any], rank: int, performance: dict[str, Any] | None = None) -> dict[str, Any]:
+def build_pick_from_selected(
+    row: dict[str, Any],
+    rank: int,
+    performance: dict[str, Any] | None = None,
+    price_rows: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     stock_code = normalize_stock_code(row.get("stock_code"))
     decision = first_present(row, "participation_level", "suggested_action")
+    base_price = (performance or {}).get("selection_price") or row.get("selection_price")
+    price_points = build_price_points(price_rows or [], base_price)
     return {
         "rank": as_int(row.get("rank_in_run"), rank),
         "symbol": symbol_from_code(stock_code),
@@ -310,7 +370,7 @@ def build_pick_from_selected(row: dict[str, Any], rank: int, performance: dict[s
         "selection_price": rounded(row.get("selection_price"), 4),
         "stop_loss_price": rounded(row.get("stop_loss_price"), 4),
         "take_profit_price": rounded(row.get("take_profit_price"), 4),
-        "review": review_from_performance(performance),
+        "review": review_from_performance(performance, price_points),
     }
 
 
@@ -567,6 +627,7 @@ def build_runs_from_workbook(records: dict[str, list[dict[str, Any]]], generated
     runs = records.get("selection_runs", [])
     selected_by_run = group_by(records.get("selected_stocks", []), "run_id")
     performance_by_run = group_by(records.get("performance", []), "run_id")
+    future_prices_by_run = group_by(records.get("future_prices", []), "run_id")
     summary_by_run = {clean_text(row.get("run_id")): row for row in records.get("summary_by_run", [])}
     result: list[dict[str, Any]] = []
     for run in runs:
@@ -577,8 +638,16 @@ def build_runs_from_workbook(records: dict[str, list[dict[str, Any]]], generated
             normalize_stock_code(row.get("stock_code")): row
             for row in performance_rows
         }
+        price_rows_by_code: dict[str, list[dict[str, Any]]] = defaultdict(list)
+        for price_row in future_prices_by_run.get(run_id, []):
+            price_rows_by_code[normalize_stock_code(price_row.get("stock_code"))].append(price_row)
         picks = [
-            build_pick_from_selected(row, idx, performance_by_code.get(normalize_stock_code(row.get("stock_code"))))
+            build_pick_from_selected(
+                row,
+                idx,
+                performance_by_code.get(normalize_stock_code(row.get("stock_code"))),
+                price_rows_by_code.get(normalize_stock_code(row.get("stock_code")), []),
+            )
             for idx, row in enumerate(selected_rows, start=1)
         ]
         if not picks:

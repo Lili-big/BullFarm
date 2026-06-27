@@ -6,13 +6,17 @@ import shutil
 import subprocess
 import sys
 import traceback
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CONFIG_PATH = Path("config/daily_selection.json")
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from backend.jobs.trading_calendar import is_trading_day, previous_trading_day
 
 DEFAULT_CONFIG: dict[str, Any] = {
     "version": 1,
@@ -95,20 +99,23 @@ def parse_date(value: str) -> str:
     raise argparse.ArgumentTypeError(f"Expected YYYYMMDD or YYYY-MM-DD, got {value!r}.")
 
 
-def previous_weekday(value: datetime) -> datetime:
-    current = value - timedelta(days=1)
-    while current.weekday() >= 5:
-        current -= timedelta(days=1)
-    return current
+def previous_weekday(value: datetime, project_root: Path | None = None) -> datetime:
+    day = previous_trading_day(value, project_root=project_root or PROJECT_ROOT)
+    return datetime.combine(day, datetime.min.time())
 
 
-def latest_complete_market_date(run_date: str, now: datetime | None = None) -> str:
+def latest_complete_market_date(
+    run_date: str,
+    now: datetime | None = None,
+    project_root: Path | None = None,
+) -> str:
     now = now or datetime.now()
     run_dt = datetime.strptime(run_date, "%Y%m%d")
-    if run_dt.weekday() >= 5:
-        return previous_weekday(run_dt).strftime("%Y%m%d")
+    root = project_root or PROJECT_ROOT
+    if not is_trading_day(run_dt, project_root=root):
+        return previous_weekday(run_dt, project_root=root).strftime("%Y%m%d")
     if run_dt.date() >= now.date() and (now.hour, now.minute) < (15, 10):
-        return previous_weekday(run_dt).strftime("%Y%m%d")
+        return previous_weekday(run_dt, project_root=root).strftime("%Y%m%d")
     return run_dt.strftime("%Y%m%d")
 
 
@@ -676,7 +683,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.finalize_run:
         return finalize_run(args)
     if args.as_of_date is None:
-        args.as_of_date = latest_complete_market_date(args.run_date)
+        args.as_of_date = latest_complete_market_date(args.run_date, project_root=args.project_root.resolve())
     return run_daily_selection(args)
 
 

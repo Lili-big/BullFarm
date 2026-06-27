@@ -1,61 +1,39 @@
-# Netlify + Render + Supabase Deployment
+# Legacy Netlify + Render + Supabase Deployment
 
-This project is now split into three deployment surfaces:
+This document is retained only as a legacy reference. The active production path is now documented in `docs/local_automation_architecture.md`.
 
-- `frontend/`: Vite static dashboard for Netlify. It reads Supabase public views with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
-- `backend/`: FastAPI wrapper for Render. It exposes health checks, protected manual triggers, and job status reads.
-- `supabase/`: migrations for stock selection facts, dashboard views, and Render job status records.
+The previous architecture used:
 
-## Environment Variables
+- Netlify for `frontend/`
+- Render Web Service for `backend.api:app`
+- Render Cron for the daily stock-selection job
+- Supabase as the database and public dashboard read source
 
-Render keeps server-side variables in the `stock-selection-env` group from `render.yaml`:
+That path has been downgraded because the current target architecture keeps execution and Supabase writes on the local machine, with Codex automations only waking and triggering local jobs.
 
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `ADMIN_TRIGGER_TOKEN`
-- `APP_TIMEZONE=Asia/Shanghai`
+Do not treat `render.yaml` or `config/render_daily_selection.json` as the primary production path for new work. They remain useful only for historical comparison or a future cloud redeployment.
 
-Netlify only needs public read variables:
+## Legacy Commands
 
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
-- `VITE_DASHBOARD_RUNS_INDEX_VIEW=dashboard_runs_index`
-- `VITE_DASHBOARD_RUN_DETAIL_VIEW=dashboard_runs`
-
-Never put `SUPABASE_SERVICE_ROLE_KEY` in Netlify or frontend files.
-
-## Render Jobs
-
-The web service starts with:
+Historical Render web service start command:
 
 ```bash
 uvicorn backend.api:app --host 0.0.0.0 --port $PORT
 ```
 
-The cron job runs at `30 0 * * *` UTC, which is 08:30 in Beijing time. The wrapper computes the previous complete trading weekday, then calls the existing runner with `config/render_daily_selection.json`.
-
-Manual trigger:
+Historical Render cron command:
 
 ```bash
-curl -X POST "$RENDER_API_URL/jobs/daily-selection" \
-  -H "Authorization: Bearer $ADMIN_TRIGGER_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"dry_run": true}'
+python -m backend.jobs.daily_selection --trigger-source cron
 ```
 
-Job status:
+## Current Replacement
 
-```bash
-curl "$RENDER_API_URL/jobs/<job_id>" \
-  -H "Authorization: Bearer $ADMIN_TRIGGER_TOKEN"
+Use these local commands instead:
+
+```powershell
+python -m backend.jobs.daily_selection --trigger-source codex_automation
+python -m backend.jobs.price_refresh --trigger-source codex_automation
 ```
 
-## Local Checks
-
-```bash
-python -m unittest discover -s tests -v
-python -m backend.jobs.daily_selection --dry-run --trigger-source local
-npm --prefix frontend run build
-```
-
-`config/local.env` is for local development only and is ignored by git.
+For details, see `docs/local_automation_architecture.md`.

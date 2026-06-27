@@ -1,0 +1,8 @@
+{
+  "market": "cn_a_share",
+  "timezone": "Asia/Shanghai",
+  "rule": "Weekdays are trading days unless listed in holidays. Weekend dates are closed unless listed in makeup_trading_days.",
+  "holidays": [],
+  "makeup_trading_days": [],
+  "trading_days": []
+}
