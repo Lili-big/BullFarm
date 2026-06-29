@@ -34,6 +34,95 @@ async function fetchSupabaseRows(view, query) {
   });
 }
 
+function normalizeStockCode(value) {
+  const text = String(value || "").trim().toUpperCase();
+  const match = text.match(/(\d{6})/);
+  if (!match) return text;
+  const code = match[1];
+  if (text.endsWith(".SH") || text.endsWith(".SZ") || text.endsWith(".BJ")) {
+    return `${code}.${text.slice(-2)}`;
+  }
+  if (code.startsWith("6") || code.startsWith("9")) return `${code}.SH`;
+  if (code.startsWith("4") || code.startsWith("8")) return `${code}.BJ`;
+  return `${code}.SZ`;
+}
+
+function numericValue(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function calculateReturnPct(closePrice, basePrice) {
+  const close = numericValue(closePrice);
+  const base = numericValue(basePrice);
+  if (close === null || base === null || base === 0) return null;
+  return Number((((close - base) / base) * 100).toFixed(4));
+}
+
+function pricePointOrder(offset) {
+  const text = String(offset || "").toUpperCase();
+  if (text === "LATEST") return Number.MAX_SAFE_INTEGER;
+  const match = text.match(/\d+/);
+  return match ? Number(match[0]) : Number.MAX_SAFE_INTEGER - 1;
+}
+
+function buildPricePointsFromRows(rows, basePrice) {
+  return (Array.isArray(rows) ? rows : [])
+    .filter((row) => !["T0", "0"].includes(String(row.trading_day_offset || "").toUpperCase()))
+    .map((row) => ({
+      trading_day_offset: row.trading_day_offset,
+      price_date: row.price_date,
+      close: numericValue(row.close),
+      return_pct: calculateReturnPct(row.close, basePrice),
+    }))
+    .filter((row) => row.trading_day_offset && (row.price_date || row.close !== null))
+    .sort((a, b) => {
+      const dateCompare = String(a.price_date || "").localeCompare(String(b.price_date || ""));
+      return dateCompare || pricePointOrder(a.trading_day_offset) - pricePointOrder(b.trading_day_offset);
+    });
+}
+
+async function enrichDetailWithSupabasePrices(detail) {
+  const runId = detail?.run?.run_id || detail?.active_run_id;
+  const picks = Array.isArray(detail?.picks) ? detail.picks : [];
+  if (!hasSupabaseConfig() || !runId || !picks.length) return detail;
+
+  const query = [
+    "select=stock_code,trading_day_offset,price_date,close",
+    `run_id=eq.${encodeURIComponent(runId)}`,
+    "order=stock_code.asc,price_date.asc",
+  ].join("&");
+  const priceRows = await fetchSupabaseRows("stock_selection_prices", query);
+  if (!Array.isArray(priceRows) || !priceRows.length) return detail;
+
+  const pricesByCode = new Map();
+  priceRows.forEach((row) => {
+    const code = normalizeStockCode(row.stock_code);
+    if (!code) return;
+    if (!pricesByCode.has(code)) pricesByCode.set(code, []);
+    pricesByCode.get(code).push(row);
+  });
+
+  return {
+    ...detail,
+    picks: picks.map((pick) => {
+      const code = normalizeStockCode(pick.stock_code || pick.symbol);
+      const rows = pricesByCode.get(code) || [];
+      if (!rows.length) return pick;
+      const review = pick.review || {};
+      const basePrice = review.selection_price ?? pick.selection_price;
+      return {
+        ...pick,
+        review: {
+          ...review,
+          price_points: buildPricePointsFromRows(rows, basePrice),
+        },
+      };
+    }),
+  };
+}
+
 function dateKey(value) {
   const text = String(value || "");
   const match = text.match(/(20\d{2})[-_/]?(\d{2})[-_/]?(\d{2})/);
@@ -94,7 +183,7 @@ async function loadDetail(runDate) {
       config.runDetailView,
       `select=*&date=eq.${encodeURIComponent(runDate)}&limit=1`
     );
-    return { source: "Supabase", data: normalizeDetailPayload(rows) };
+    return { source: "Supabase", data: await enrichDetailWithSupabasePrices(normalizeDetailPayload(rows)) };
   }
   if (config.enableLocalFallback) {
     return {
@@ -604,8 +693,9 @@ export default function App() {
   const reviewEmpty = detail?.review?.empty_state;
   const dateOptions = index?.runs || [];
   const latestDate = index?.latest_date || dateOptions[0]?.date || "";
-  const isHistoricalView = Boolean(selectedDate && latestDate && selectedDate !== latestDate);
   const priceStages = useMemo(() => getPriceStages(picks), [picks]);
+  const hasPriceStages = priceStages.length > 0;
+  const isHistoricalView = Boolean(hasPriceStages || (selectedDate && latestDate && selectedDate !== latestDate));
   const selectedPick = useMemo(
     () => picks.find((pick) => pickKey(pick) === selectedPickKey) || null,
     [picks, selectedPickKey]

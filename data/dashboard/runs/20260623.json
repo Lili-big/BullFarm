@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-28T00:28:33",
+  "generated_at": "2026-06-28T01:28:17",
   "date": "20260623",
   "selection_date": "2026-06-23",
   "active_run_id": "20260623_tencent_range_v1_0",
@@ -10,14 +10,14 @@
       "selection_time": "10:56:18",
       "market_env": "弱势/轻仓试错",
       "total_selected_count": 50,
-      "review_status": "partial_review"
+      "review_status": "ready"
     },
     {
       "run_id": "20260623_stability_check",
       "selection_time": "19:50:41",
       "market_env": "稳定性检查",
       "total_selected_count": 5,
-      "review_status": "insufficient_data"
+      "review_status": "ready"
     }
   ],
   "run": {
@@ -49,39 +49,39 @@
       "avoid": 4,
       "unknown": 0
     },
-    "review_status": "partial_review",
+    "review_status": "ready",
     "review_has_data": true,
     "review": {
-      "valid_stock_count": 0,
+      "valid_stock_count": 50,
       "win_rate_t1": 78.0,
-      "win_rate_t2": 100.0,
-      "win_rate_t3": null,
+      "win_rate_t2": 94.0,
+      "win_rate_t3": 60.0,
       "win_rate_t5": null,
       "avg_return_latest_pct": null,
       "avg_return_t1_pct": 3.27,
-      "avg_return_t2_pct": 9.71,
-      "avg_return_t3_pct": null,
+      "avg_return_t2_pct": 8.34,
+      "avg_return_t3_pct": 4.44,
       "avg_return_t5_pct": null,
-      "avg_max_drawdown_3d_pct": -2.81,
-      "hit_stop_loss_count": 18,
-      "hit_take_profit_count": 19,
-      "best_stock": "长飞光纤",
-      "worst_stock": "长飞光纤",
-      "conclusion": "数据不足，暂不判断。"
+      "avg_max_drawdown_3d_pct": -3.7,
+      "hit_stop_loss_count": 24,
+      "hit_take_profit_count": 39,
+      "best_stock": "佰维存储",
+      "worst_stock": "洛阳钼业",
+      "conclusion": "表现较好，T3 胜率 60.00%，平均收益为正。"
     }
   },
   "strategy_effectiveness": {
     "run_count": 3,
-    "reviewed_run_count": 2,
-    "valid_stock_count": 50,
-    "win_rate_t3": null,
-    "win_rate_latest": 78.0,
-    "avg_return_latest_pct": 3.32,
-    "avg_return_t3_pct": null,
-    "avg_max_drawdown_3d_pct": null,
-    "hit_stop_loss_count": 18,
-    "hit_take_profit_count": 19,
-    "conclusion": "最新价正向，等待T3"
+    "reviewed_run_count": 3,
+    "valid_stock_count": 103,
+    "win_rate_t3": 58.49,
+    "win_rate_latest": 57.28,
+    "avg_return_latest_pct": 2.45,
+    "avg_return_t3_pct": 2.15,
+    "avg_max_drawdown_3d_pct": -5.54,
+    "hit_stop_loss_count": 42,
+    "hit_take_profit_count": 72,
+    "conclusion": "正向验证"
   },
   "filters": {
     "decisions": [
@@ -142,26 +142,26 @@
     ]
   },
   "review": {
-    "status": "partial_review",
+    "status": "ready",
     "has_review": true,
     "empty_state": null,
     "summary": {
-      "valid_stock_count": 0,
+      "valid_stock_count": 50,
       "win_rate_t1": 78.0,
-      "win_rate_t2": 100.0,
-      "win_rate_t3": null,
+      "win_rate_t2": 94.0,
+      "win_rate_t3": 60.0,
       "win_rate_t5": null,
       "avg_return_latest_pct": null,
       "avg_return_t1_pct": 3.27,
-      "avg_return_t2_pct": 9.71,
-      "avg_return_t3_pct": null,
+      "avg_return_t2_pct": 8.34,
+      "avg_return_t3_pct": 4.44,
       "avg_return_t5_pct": null,
-      "avg_max_drawdown_3d_pct": -2.81,
-      "hit_stop_loss_count": 18,
-      "hit_take_profit_count": 19,
-      "best_stock": "长飞光纤",
-      "worst_stock": "长飞光纤",
-      "conclusion": "数据不足，暂不判断。"
+      "avg_max_drawdown_3d_pct": -3.7,
+      "hit_stop_loss_count": 24,
+      "hit_take_profit_count": 39,
+      "best_stock": "佰维存储",
+      "worst_stock": "洛阳钼业",
+      "conclusion": "表现较好，T3 胜率 60.00%，平均收益为正。"
     }
   },
   "picks": [
@@ -190,31 +190,43 @@
       "take_profit_price": 599.109,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "失败",
         "returns": {
-          "return_latest_pct": 1.65,
+          "return_latest_pct": -4.83,
           "return_t1_close_pct": 1.65,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 0.77,
+          "return_t3_close_pct": -4.83,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 580.0,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 543.0,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 580.0,
             "return_pct": 1.65
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 575.0,
+            "return_pct": 0.77
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 543.0,
+            "return_pct": -4.83
           }
         ],
-        "max_gain_3d_pct": 4.1,
-        "max_drawdown_3d_pct": -3.05,
+        "max_gain_3d_pct": 5.16,
+        "max_drawdown_3d_pct": -6.59,
         "hit_stop_loss": true,
-        "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "hit_take_profit": true,
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -242,31 +254,43 @@
       "take_profit_price": 77.805,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "失败",
         "returns": {
-          "return_latest_pct": 3.62,
+          "return_latest_pct": -5.24,
           "return_t1_close_pct": 3.62,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 3.9,
+          "return_t3_close_pct": -5.24,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 76.78,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 70.22,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 76.78,
             "return_pct": 3.62
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 76.99,
+            "return_pct": 3.9
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 70.22,
+            "return_pct": -5.24
           }
         ],
-        "max_gain_3d_pct": 3.9,
-        "max_drawdown_3d_pct": -1.48,
-        "hit_stop_loss": false,
+        "max_gain_3d_pct": 4.86,
+        "max_drawdown_3d_pct": -5.53,
+        "hit_stop_loss": true,
         "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -294,31 +318,43 @@
       "take_profit_price": 64.8165,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "基本持平",
         "returns": {
-          "return_latest_pct": 0.29,
+          "return_latest_pct": -0.71,
           "return_t1_close_pct": 0.29,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 10.32,
+          "return_t3_close_pct": -0.71,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 61.91,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 61.29,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 61.91,
             "return_pct": 0.29
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 68.1,
+            "return_pct": 10.32
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 61.29,
+            "return_pct": -0.71
           }
         ],
-        "max_gain_3d_pct": 3.66,
+        "max_gain_3d_pct": 10.32,
         "max_drawdown_3d_pct": -3.13,
         "hit_stop_loss": true,
-        "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "hit_take_profit": true,
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -346,31 +382,43 @@
       "take_profit_price": 20.8215,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 9.98,
+          "return_latest_pct": 9.58,
           "return_t1_close_pct": 9.98,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 9.28,
+          "return_t3_close_pct": 9.58,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 21.81,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 21.73,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 21.81,
             "return_pct": 9.98
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 21.67,
+            "return_pct": 9.28
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 21.73,
+            "return_pct": 9.58
           }
         ],
-        "max_gain_3d_pct": 9.98,
+        "max_gain_3d_pct": 16.89,
         "max_drawdown_3d_pct": -2.67,
         "hit_stop_loss": false,
         "hit_take_profit": true,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -398,31 +446,43 @@
       "take_profit_price": 123.1755,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "失败",
         "returns": {
-          "return_latest_pct": 1.46,
+          "return_latest_pct": -5.54,
           "return_t1_close_pct": 1.46,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 4.85,
+          "return_t3_close_pct": -5.54,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 119.02,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 110.81,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 119.02,
             "return_pct": 1.46
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 123.0,
+            "return_pct": 4.85
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 110.81,
+            "return_pct": -5.54
           }
         ],
-        "max_gain_3d_pct": 2.76,
-        "max_drawdown_3d_pct": -3.11,
+        "max_gain_3d_pct": 6.36,
+        "max_drawdown_3d_pct": -5.63,
         "hit_stop_loss": true,
-        "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "hit_take_profit": true,
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -450,31 +510,43 @@
       "take_profit_price": 89.7015,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "小亏",
         "returns": {
-          "return_latest_pct": -2.81,
+          "return_latest_pct": -1.09,
           "return_t1_close_pct": -2.81,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 0.5,
+          "return_t3_close_pct": -1.09,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 83.03,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 84.5,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 83.03,
             "return_pct": -2.81
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 85.86,
+            "return_pct": 0.5
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 84.5,
+            "return_pct": -1.09
           }
         ],
-        "max_gain_3d_pct": 0.63,
+        "max_gain_3d_pct": 4.97,
         "max_drawdown_3d_pct": -4.97,
         "hit_stop_loss": true,
         "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -502,31 +574,43 @@
       "take_profit_price": 61.8765,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 9.99,
+          "return_latest_pct": 25.78,
           "return_t1_close_pct": 9.99,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 20.14,
+          "return_t3_close_pct": 25.78,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 64.82,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 74.12,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 64.82,
             "return_pct": 9.99
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 70.8,
+            "return_pct": 20.14
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 74.12,
+            "return_pct": 25.78
           }
         ],
-        "max_gain_3d_pct": 9.99,
+        "max_gain_3d_pct": 31.0,
         "max_drawdown_3d_pct": -2.0,
         "hit_stop_loss": false,
         "hit_take_profit": true,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -554,31 +638,43 @@
       "take_profit_price": 86.8875,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "失败",
         "returns": {
-          "return_latest_pct": -0.59,
+          "return_latest_pct": -7.89,
           "return_t1_close_pct": -0.59,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 2.34,
+          "return_t3_close_pct": -7.89,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 82.26,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 76.22,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 82.26,
             "return_pct": -0.59
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 84.69,
+            "return_pct": 2.34
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 76.22,
+            "return_pct": -7.89
           }
         ],
-        "max_gain_3d_pct": 2.37,
-        "max_drawdown_3d_pct": -4.35,
+        "max_gain_3d_pct": 5.62,
+        "max_drawdown_3d_pct": -7.89,
         "hit_stop_loss": true,
-        "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "hit_take_profit": true,
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -606,31 +702,43 @@
       "take_profit_price": 673.0395,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 10.0,
+          "return_latest_pct": 20.13,
           "return_t1_close_pct": 10.0,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 20.94,
+          "return_t3_close_pct": 20.13,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 705.09,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 770.0,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 705.09,
             "return_pct": 10.0
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 775.21,
+            "return_pct": 20.94
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 770.0,
+            "return_pct": 20.13
           }
         ],
-        "max_gain_3d_pct": 10.0,
+        "max_gain_3d_pct": 21.53,
         "max_drawdown_3d_pct": -1.57,
         "hit_stop_loss": false,
         "hit_take_profit": true,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -658,31 +766,43 @@
       "take_profit_price": 29.736,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "小亏",
         "returns": {
-          "return_latest_pct": -1.52,
+          "return_latest_pct": -2.05,
           "return_t1_close_pct": -1.52,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 2.33,
+          "return_t3_close_pct": -2.05,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 27.89,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 27.74,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 27.89,
             "return_pct": -1.52
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 28.98,
+            "return_pct": 2.33
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 27.74,
+            "return_pct": -2.05
           }
         ],
-        "max_gain_3d_pct": 1.69,
+        "max_gain_3d_pct": 2.97,
         "max_drawdown_3d_pct": -2.19,
         "hit_stop_loss": false,
         "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -710,31 +830,43 @@
       "take_profit_price": 71.841,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 9.09,
+          "return_latest_pct": 4.65,
           "return_t1_close_pct": 9.09,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 13.72,
+          "return_t3_close_pct": 4.65,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 74.64,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 71.6,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 74.64,
             "return_pct": 9.09
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 77.81,
+            "return_pct": 13.72
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 71.6,
+            "return_pct": 4.65
           }
         ],
-        "max_gain_3d_pct": 9.37,
+        "max_gain_3d_pct": 16.02,
         "max_drawdown_3d_pct": -0.32,
         "hit_stop_loss": false,
         "hit_take_profit": true,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -762,31 +894,43 @@
       "take_profit_price": 203.7,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 1.96,
+          "return_latest_pct": 20.21,
           "return_t1_close_pct": 1.96,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 22.35,
+          "return_t3_close_pct": 20.21,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 197.8,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 233.21,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 197.8,
             "return_pct": 1.96
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 237.36,
+            "return_pct": 22.35
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 233.21,
+            "return_pct": 20.21
           }
         ],
-        "max_gain_3d_pct": 2.58,
+        "max_gain_3d_pct": 24.74,
         "max_drawdown_3d_pct": -3.72,
         "hit_stop_loss": true,
-        "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "hit_take_profit": true,
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -814,31 +958,43 @@
       "take_profit_price": 176.2635,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 5.62,
+          "return_latest_pct": 6.33,
           "return_t1_close_pct": 5.62,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 11.51,
+          "return_t3_close_pct": 6.33,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 177.3,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 178.5,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 177.3,
             "return_pct": 5.62
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 187.2,
+            "return_pct": 11.51
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 178.5,
+            "return_pct": 6.33
           }
         ],
-        "max_gain_3d_pct": 6.86,
+        "max_gain_3d_pct": 11.99,
         "max_drawdown_3d_pct": -0.52,
         "hit_stop_loss": false,
         "hit_take_profit": true,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -866,31 +1022,43 @@
       "take_profit_price": 90.3945,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 10.0,
+          "return_latest_pct": 17.19,
           "return_t1_close_pct": 10.0,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 21.0,
+          "return_t3_close_pct": 17.19,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 94.7,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 100.89,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 94.7,
             "return_pct": 10.0
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 104.17,
+            "return_pct": 21.0
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 100.89,
+            "return_pct": 17.19
           }
         ],
-        "max_gain_3d_pct": 10.0,
+        "max_gain_3d_pct": 27.0,
         "max_drawdown_3d_pct": -2.43,
         "hit_stop_loss": false,
         "hit_take_profit": true,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -918,31 +1086,43 @@
       "take_profit_price": 107.625,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "小亏",
         "returns": {
-          "return_latest_pct": -2.36,
+          "return_latest_pct": -2.92,
           "return_t1_close_pct": -2.36,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 3.1,
+          "return_t3_close_pct": -2.92,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 100.08,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 99.51,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 100.08,
             "return_pct": -2.36
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 105.68,
+            "return_pct": 3.1
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 99.51,
+            "return_pct": -2.92
           }
         ],
-        "max_gain_3d_pct": -0.53,
+        "max_gain_3d_pct": 7.0,
         "max_drawdown_3d_pct": -7.52,
         "hit_stop_loss": true,
-        "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "hit_take_profit": true,
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -970,31 +1150,43 @@
       "take_profit_price": 7.1085,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 4.43,
+          "return_latest_pct": 15.07,
           "return_t1_close_pct": 4.43,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 11.08,
+          "return_t3_close_pct": 15.07,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 7.07,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 7.79,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 7.07,
             "return_pct": 4.43
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 7.52,
+            "return_pct": 11.08
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 7.79,
+            "return_pct": 15.07
           }
         ],
-        "max_gain_3d_pct": 5.61,
+        "max_gain_3d_pct": 21.71,
         "max_drawdown_3d_pct": -2.95,
         "hit_stop_loss": false,
         "hit_take_profit": true,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -1022,31 +1214,43 @@
       "take_profit_price": 43.89,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "基本持平",
         "returns": {
-          "return_latest_pct": 5.86,
+          "return_latest_pct": -0.69,
           "return_t1_close_pct": 5.86,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 4.76,
+          "return_t3_close_pct": -0.69,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 44.25,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 41.51,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 44.25,
             "return_pct": 5.86
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 43.79,
+            "return_pct": 4.76
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 41.51,
+            "return_pct": -0.69
           }
         ],
-        "max_gain_3d_pct": 6.58,
+        "max_gain_3d_pct": 9.95,
         "max_drawdown_3d_pct": -4.78,
         "hit_stop_loss": true,
         "hit_take_profit": true,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -1074,31 +1278,43 @@
       "take_profit_price": 117.495,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 10.0,
+          "return_latest_pct": 7.67,
           "return_t1_close_pct": 10.0,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 16.26,
+          "return_t3_close_pct": 7.67,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 123.09,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 120.48,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 123.09,
             "return_pct": 10.0
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 130.1,
+            "return_pct": 16.26
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 120.48,
+            "return_pct": 7.67
           }
         ],
-        "max_gain_3d_pct": 10.0,
+        "max_gain_3d_pct": 18.75,
         "max_drawdown_3d_pct": -5.26,
         "hit_stop_loss": true,
         "hit_take_profit": true,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -1126,31 +1342,43 @@
       "take_profit_price": 55.986,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": -0.75,
+          "return_latest_pct": 4.26,
           "return_t1_close_pct": -0.75,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 4.5,
+          "return_t3_close_pct": 4.26,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 52.92,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 55.59,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 52.92,
             "return_pct": -0.75
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 55.72,
+            "return_pct": 4.5
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 55.59,
+            "return_pct": 4.26
           }
         ],
-        "max_gain_3d_pct": 1.2,
+        "max_gain_3d_pct": 9.71,
         "max_drawdown_3d_pct": -5.5,
         "hit_stop_loss": true,
-        "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "hit_take_profit": true,
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -1178,31 +1406,43 @@
       "take_profit_price": 390.306,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 3.03,
+          "return_latest_pct": 11.11,
           "return_t1_close_pct": 3.03,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 7.37,
+          "return_t3_close_pct": 11.11,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 383.0,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 413.0,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 383.0,
             "return_pct": 3.03
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 399.13,
+            "return_pct": 7.37
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 413.0,
+            "return_pct": 11.11
           }
         ],
-        "max_gain_3d_pct": 6.26,
+        "max_gain_3d_pct": 14.01,
         "max_drawdown_3d_pct": -3.34,
         "hit_stop_loss": true,
         "hit_take_profit": true,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -1230,31 +1470,43 @@
       "take_profit_price": 1483.65,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 2.83,
+          "return_latest_pct": 3.18,
           "return_t1_close_pct": 2.83,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 6.51,
+          "return_t3_close_pct": 3.18,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 1453.0,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 1458.0,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 1453.0,
             "return_pct": 2.83
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 1505.0,
+            "return_pct": 6.51
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 1458.0,
+            "return_pct": 3.18
           }
         ],
-        "max_gain_3d_pct": 3.95,
+        "max_gain_3d_pct": 8.72,
         "max_drawdown_3d_pct": -2.48,
         "hit_stop_loss": false,
-        "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "hit_take_profit": true,
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -1282,31 +1534,43 @@
       "take_profit_price": 792.7605,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 7.28,
+          "return_latest_pct": 25.96,
           "return_t1_close_pct": 7.28,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 18.01,
+          "return_t3_close_pct": 25.96,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 810.0,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 951.0,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 810.0,
             "return_pct": 7.28
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 891.0,
+            "return_pct": 18.01
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 951.0,
+            "return_pct": 25.96
           }
         ],
-        "max_gain_3d_pct": 8.19,
+        "max_gain_3d_pct": 29.8,
         "max_drawdown_3d_pct": -1.52,
         "hit_stop_loss": false,
         "hit_take_profit": true,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -1334,31 +1598,43 @@
       "take_profit_price": 293.37,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 10.0,
+          "return_latest_pct": 12.71,
           "return_t1_close_pct": 10.0,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 10.95,
+          "return_t3_close_pct": 12.71,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 307.35,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 314.9,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 307.35,
             "return_pct": 10.0
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 309.99,
+            "return_pct": 10.95
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 314.9,
+            "return_pct": 12.71
           }
         ],
-        "max_gain_3d_pct": 12.61,
+        "max_gain_3d_pct": 18.83,
         "max_drawdown_3d_pct": -2.41,
         "hit_stop_loss": false,
         "hit_take_profit": true,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -1386,17 +1662,17 @@
       "take_profit_price": 148.785,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 9.71,
+          "return_latest_pct": 4.98,
           "return_t1_close_pct": 6.94,
-          "return_t2_close_pct": 9.71,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 10.7,
+          "return_t3_close_pct": 4.98,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 155.46,
-        "latest_price_date": "2026-06-25",
+        "latest_price": 148.76,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
@@ -1407,16 +1683,22 @@
           {
             "trading_day_offset": "T2",
             "price_date": "2026-06-25",
-            "close": 155.46,
-            "return_pct": 9.71
+            "close": 156.86,
+            "return_pct": 10.7
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 148.76,
+            "return_pct": 4.98
           }
         ],
-        "max_gain_3d_pct": 11.5,
+        "max_gain_3d_pct": 11.97,
         "max_drawdown_3d_pct": -0.27,
         "hit_stop_loss": false,
         "hit_take_profit": true,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -1444,31 +1726,43 @@
       "take_profit_price": 261.87,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "小亏",
         "returns": {
-          "return_latest_pct": -3.69,
+          "return_latest_pct": -2.97,
           "return_t1_close_pct": -3.69,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 3.85,
+          "return_t3_close_pct": -2.97,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 240.2,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 242.0,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 240.2,
             "return_pct": -3.69
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 259.0,
+            "return_pct": 3.85
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 242.0,
+            "return_pct": -2.97
           }
         ],
-        "max_gain_3d_pct": -0.3,
+        "max_gain_3d_pct": 6.61,
         "max_drawdown_3d_pct": -4.97,
         "hit_stop_loss": true,
-        "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "hit_take_profit": true,
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -1496,31 +1790,43 @@
       "take_profit_price": 20.4645,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "失败",
         "returns": {
-          "return_latest_pct": -2.62,
+          "return_latest_pct": -11.54,
           "return_t1_close_pct": -2.62,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": -7.29,
+          "return_t3_close_pct": -11.54,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 18.98,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 17.24,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 18.98,
             "return_pct": -2.62
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 18.07,
+            "return_pct": -7.29
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 17.24,
+            "return_pct": -11.54
           }
         ],
         "max_gain_3d_pct": -1.03,
-        "max_drawdown_3d_pct": -5.7,
+        "max_drawdown_3d_pct": -11.95,
         "hit_stop_loss": true,
         "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -1548,31 +1854,43 @@
       "take_profit_price": 332.85,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 6.34,
+          "return_latest_pct": 8.8,
           "return_t1_close_pct": 6.34,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 13.65,
+          "return_t3_close_pct": 8.8,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 337.1,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 344.9,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 337.1,
             "return_pct": 6.34
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 360.28,
+            "return_pct": 13.65
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 344.9,
+            "return_pct": 8.8
           }
         ],
-        "max_gain_3d_pct": 7.89,
+        "max_gain_3d_pct": 16.4,
         "max_drawdown_3d_pct": -2.21,
         "hit_stop_loss": false,
         "hit_take_profit": true,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -1600,31 +1918,43 @@
       "take_profit_price": 267.771,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "小赚",
         "returns": {
-          "return_latest_pct": 0.83,
+          "return_latest_pct": 2.08,
           "return_t1_close_pct": 0.83,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 8.15,
+          "return_t3_close_pct": 2.08,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 257.13,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 260.32,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 257.13,
             "return_pct": 0.83
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 275.8,
+            "return_pct": 8.15
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 260.32,
+            "return_pct": 2.08
           }
         ],
-        "max_gain_3d_pct": 2.33,
+        "max_gain_3d_pct": 8.22,
         "max_drawdown_3d_pct": -1.18,
         "hit_stop_loss": false,
-        "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "hit_take_profit": true,
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -1652,31 +1982,43 @@
       "take_profit_price": 50.925,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 3.57,
+          "return_latest_pct": 6.82,
           "return_t1_close_pct": 3.57,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 10.37,
+          "return_t3_close_pct": 6.82,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 50.23,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 51.81,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 50.23,
             "return_pct": 3.57
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 53.53,
+            "return_pct": 10.37
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 51.81,
+            "return_pct": 6.82
           }
         ],
-        "max_gain_3d_pct": 6.41,
+        "max_gain_3d_pct": 12.97,
         "max_drawdown_3d_pct": -0.41,
         "hit_stop_loss": false,
         "hit_take_profit": true,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -1704,31 +2046,43 @@
       "take_profit_price": 145.425,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 3.5,
+          "return_latest_pct": 6.34,
           "return_t1_close_pct": 3.5,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 11.91,
+          "return_t3_close_pct": 6.34,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 143.35,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 147.28,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 143.35,
             "return_pct": 3.5
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 154.99,
+            "return_pct": 11.91
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 147.28,
+            "return_pct": 6.34
           }
         ],
-        "max_gain_3d_pct": 4.68,
+        "max_gain_3d_pct": 12.87,
         "max_drawdown_3d_pct": -0.62,
         "hit_stop_loss": false,
-        "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "hit_take_profit": true,
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -1756,31 +2110,43 @@
       "take_profit_price": 579.6,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "小赚",
         "returns": {
-          "return_latest_pct": 0.6,
+          "return_latest_pct": 2.54,
           "return_t1_close_pct": 0.6,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 10.6,
+          "return_t3_close_pct": 2.54,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 555.3,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 566.0,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 555.3,
             "return_pct": 0.6
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 610.49,
+            "return_pct": 10.6
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 566.0,
+            "return_pct": 2.54
           }
         ],
-        "max_gain_3d_pct": 4.07,
+        "max_gain_3d_pct": 10.65,
         "max_drawdown_3d_pct": -1.09,
         "hit_stop_loss": false,
-        "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "hit_take_profit": true,
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -1808,31 +2174,43 @@
       "take_profit_price": 321.825,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 10.99,
+          "return_latest_pct": 8.47,
           "return_t1_close_pct": 10.99,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 11.58,
+          "return_t3_close_pct": 8.47,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 340.19,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 332.47,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 340.19,
             "return_pct": 10.99
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 341.98,
+            "return_pct": 11.58
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 332.47,
+            "return_pct": 8.47
           }
         ],
-        "max_gain_3d_pct": 12.56,
+        "max_gain_3d_pct": 16.0,
         "max_drawdown_3d_pct": -0.49,
         "hit_stop_loss": false,
         "hit_take_profit": true,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -1860,31 +2238,43 @@
       "take_profit_price": 625.8105,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 4.02,
+          "return_latest_pct": 14.02,
           "return_t1_close_pct": 4.02,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 13.64,
+          "return_t3_close_pct": 14.02,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 619.98,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 679.6,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 619.98,
             "return_pct": 4.02
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 677.3,
+            "return_pct": 13.64
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 679.6,
+            "return_pct": 14.02
           }
         ],
-        "max_gain_3d_pct": 4.02,
+        "max_gain_3d_pct": 15.85,
         "max_drawdown_3d_pct": -2.85,
         "hit_stop_loss": false,
-        "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "hit_take_profit": true,
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -1912,31 +2302,43 @@
       "take_profit_price": 152.3655,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 4.91,
+          "return_latest_pct": 4.25,
           "return_t1_close_pct": 4.91,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 5.3,
+          "return_t3_close_pct": 4.25,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 152.23,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 151.27,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 152.23,
             "return_pct": 4.91
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 152.8,
+            "return_pct": 5.3
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 151.27,
+            "return_pct": 4.25
           }
         ],
-        "max_gain_3d_pct": 8.7,
+        "max_gain_3d_pct": 15.83,
         "max_drawdown_3d_pct": -6.97,
         "hit_stop_loss": true,
         "hit_take_profit": true,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -1964,31 +2366,43 @@
       "take_profit_price": 280.245,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "失败",
         "returns": {
-          "return_latest_pct": -0.2,
+          "return_latest_pct": -9.95,
           "return_t1_close_pct": -0.2,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": -2.04,
+          "return_t3_close_pct": -9.95,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 266.36,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 240.34,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 266.36,
             "return_pct": -0.2
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 261.46,
+            "return_pct": -2.04
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 240.34,
+            "return_pct": -9.95
           }
         ],
         "max_gain_3d_pct": 2.08,
-        "max_drawdown_3d_pct": -2.59,
-        "hit_stop_loss": false,
+        "max_drawdown_3d_pct": -11.2,
+        "hit_stop_loss": true,
         "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -2016,31 +2430,43 @@
       "take_profit_price": 1909.215,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "小亏",
         "returns": {
-          "return_latest_pct": 1.08,
+          "return_latest_pct": -2.28,
           "return_t1_close_pct": 1.08,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 3.12,
+          "return_t3_close_pct": -2.28,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 1838.0,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 1776.91,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 1838.0,
             "return_pct": 1.08
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 1875.0,
+            "return_pct": 3.12
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 1776.91,
+            "return_pct": -2.28
           }
         ],
-        "max_gain_3d_pct": 2.78,
-        "max_drawdown_3d_pct": -2.15,
-        "hit_stop_loss": false,
+        "max_gain_3d_pct": 4.38,
+        "max_drawdown_3d_pct": -4.86,
+        "hit_stop_loss": true,
         "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -2068,31 +2494,43 @@
       "take_profit_price": 408.9435,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 7.07,
+          "return_latest_pct": 28.65,
           "return_t1_close_pct": 7.07,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 23.32,
+          "return_t3_close_pct": 28.65,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 417.0,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 501.05,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 417.0,
             "return_pct": 7.07
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 480.3,
+            "return_pct": 23.32
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 501.05,
+            "return_pct": 28.65
           }
         ],
-        "max_gain_3d_pct": 7.53,
+        "max_gain_3d_pct": 32.74,
         "max_drawdown_3d_pct": -2.72,
         "hit_stop_loss": false,
         "hit_take_profit": true,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -2120,31 +2558,43 @@
       "take_profit_price": 171.843,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "小亏",
         "returns": {
-          "return_latest_pct": 2.58,
+          "return_latest_pct": -1.66,
           "return_t1_close_pct": 2.58,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 6.06,
+          "return_t3_close_pct": -1.66,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 167.89,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 160.94,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 167.89,
             "return_pct": 2.58
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 173.58,
+            "return_pct": 6.06
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 160.94,
+            "return_pct": -1.66
           }
         ],
-        "max_gain_3d_pct": 2.65,
-        "max_drawdown_3d_pct": -1.44,
+        "max_gain_3d_pct": 6.53,
+        "max_drawdown_3d_pct": -2.24,
         "hit_stop_loss": false,
-        "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "hit_take_profit": true,
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -2172,31 +2622,43 @@
       "take_profit_price": 1375.5105,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "失败",
         "returns": {
-          "return_latest_pct": 0.17,
+          "return_latest_pct": -4.28,
           "return_t1_close_pct": 0.17,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 1.02,
+          "return_t3_close_pct": -4.28,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 1312.18,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 1253.89,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 1312.18,
             "return_pct": 0.17
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 1323.4,
+            "return_pct": 1.02
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 1253.89,
+            "return_pct": -4.28
           }
         ],
-        "max_gain_3d_pct": 2.66,
-        "max_drawdown_3d_pct": -2.13,
-        "hit_stop_loss": false,
+        "max_gain_3d_pct": 2.68,
+        "max_drawdown_3d_pct": -5.72,
+        "hit_stop_loss": true,
         "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -2224,31 +2686,43 @@
       "take_profit_price": 85.554,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "小赚",
         "returns": {
-          "return_latest_pct": 1.69,
+          "return_latest_pct": 1.34,
           "return_t1_close_pct": 1.69,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 6.76,
+          "return_t3_close_pct": 1.34,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 82.86,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 82.57,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 82.86,
             "return_pct": 1.69
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 86.99,
+            "return_pct": 6.76
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 82.57,
+            "return_pct": 1.34
           }
         ],
-        "max_gain_3d_pct": 2.55,
+        "max_gain_3d_pct": 10.08,
         "max_drawdown_3d_pct": -5.65,
         "hit_stop_loss": true,
-        "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "hit_take_profit": true,
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -2276,31 +2750,43 @@
       "take_profit_price": 52.4475,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "失败",
         "returns": {
-          "return_latest_pct": -1.44,
+          "return_latest_pct": -5.39,
           "return_t1_close_pct": -1.44,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": -1.5,
+          "return_t3_close_pct": -5.39,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 49.23,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 47.26,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 49.23,
             "return_pct": -1.44
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 49.2,
+            "return_pct": -1.5
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 47.26,
+            "return_pct": -5.39
           }
         ],
-        "max_gain_3d_pct": 0.34,
-        "max_drawdown_3d_pct": -3.84,
+        "max_gain_3d_pct": 0.66,
+        "max_drawdown_3d_pct": -5.75,
         "hit_stop_loss": true,
         "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -2328,31 +2814,43 @@
       "take_profit_price": 270.9,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "小赚",
         "returns": {
-          "return_latest_pct": 3.29,
+          "return_latest_pct": 1.48,
           "return_t1_close_pct": 3.29,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 8.2,
+          "return_t3_close_pct": 1.48,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 266.49,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 261.82,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 266.49,
             "return_pct": 3.29
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 279.16,
+            "return_pct": 8.2
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 261.82,
+            "return_pct": 1.48
           }
         ],
-        "max_gain_3d_pct": 3.29,
+        "max_gain_3d_pct": 10.46,
         "max_drawdown_3d_pct": -1.68,
         "hit_stop_loss": false,
-        "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "hit_take_profit": true,
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -2380,31 +2878,43 @@
       "take_profit_price": 152.775,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": -0.16,
+          "return_latest_pct": 10.0,
           "return_t1_close_pct": -0.16,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 12.45,
+          "return_t3_close_pct": 10.0,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 145.26,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 160.05,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 145.26,
             "return_pct": -0.16
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 163.62,
+            "return_pct": 12.45
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 160.05,
+            "return_pct": 10.0
           }
         ],
-        "max_gain_3d_pct": 3.25,
+        "max_gain_3d_pct": 13.4,
         "max_drawdown_3d_pct": -2.27,
         "hit_stop_loss": false,
-        "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "hit_take_profit": true,
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -2432,31 +2942,43 @@
       "take_profit_price": 95.319,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 1.04,
+          "return_latest_pct": 13.25,
           "return_t1_close_pct": 1.04,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 8.39,
+          "return_t3_close_pct": 13.25,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 91.72,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 102.81,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 91.72,
             "return_pct": 1.04
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 98.4,
+            "return_pct": 8.39
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 102.81,
+            "return_pct": 13.25
           }
         ],
-        "max_gain_3d_pct": 4.23,
-        "max_drawdown_3d_pct": -2.51,
-        "hit_stop_loss": false,
-        "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "max_gain_3d_pct": 16.75,
+        "max_drawdown_3d_pct": -4.16,
+        "hit_stop_loss": true,
+        "hit_take_profit": true,
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -2484,31 +3006,43 @@
       "take_profit_price": 297.6855,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "成功",
         "returns": {
-          "return_latest_pct": 2.15,
+          "return_latest_pct": 6.17,
           "return_t1_close_pct": 2.15,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 8.02,
+          "return_t3_close_pct": 6.17,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 289.6,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 301.0,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 289.6,
             "return_pct": 2.15
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 306.25,
+            "return_pct": 8.02
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 301.0,
+            "return_pct": 6.17
           }
         ],
-        "max_gain_3d_pct": 3.94,
+        "max_gain_3d_pct": 12.12,
         "max_drawdown_3d_pct": -2.3,
         "hit_stop_loss": false,
-        "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "hit_take_profit": true,
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -2536,31 +3070,43 @@
       "take_profit_price": 326.613,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "小赚",
         "returns": {
-          "return_latest_pct": 4.57,
+          "return_latest_pct": 2.23,
           "return_t1_close_pct": 4.57,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 9.94,
+          "return_t3_close_pct": 2.23,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 325.28,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 318.0,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 325.28,
             "return_pct": 4.57
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 341.97,
+            "return_pct": 9.94
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 318.0,
+            "return_pct": 2.23
           }
         ],
-        "max_gain_3d_pct": 4.8,
+        "max_gain_3d_pct": 11.23,
         "max_drawdown_3d_pct": -1.63,
         "hit_stop_loss": false,
-        "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "hit_take_profit": true,
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -2588,31 +3134,43 @@
       "take_profit_price": 21.945,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "失败",
         "returns": {
-          "return_latest_pct": -3.44,
+          "return_latest_pct": -3.97,
           "return_t1_close_pct": -3.44,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 1.0,
+          "return_t3_close_pct": -3.97,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 20.18,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 20.07,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 20.18,
             "return_pct": -3.44
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 21.11,
+            "return_pct": 1.0
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 20.07,
+            "return_pct": -3.97
           }
         ],
-        "max_gain_3d_pct": 1.63,
-        "max_drawdown_3d_pct": -3.83,
+        "max_gain_3d_pct": 3.21,
+        "max_drawdown_3d_pct": -4.21,
         "hit_stop_loss": true,
         "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -2640,31 +3198,43 @@
       "take_profit_price": 72.828,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "小亏",
         "returns": {
-          "return_latest_pct": 8.2,
+          "return_latest_pct": -1.96,
           "return_t1_close_pct": 8.2,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 7.3,
+          "return_t3_close_pct": -1.96,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 75.05,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 68.0,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 75.05,
             "return_pct": 8.2
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 74.42,
+            "return_pct": 7.3
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 68.0,
+            "return_pct": -1.96
           }
         ],
         "max_gain_3d_pct": 10.01,
         "max_drawdown_3d_pct": -4.18,
         "hit_stop_loss": true,
         "hit_take_profit": true,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -2692,31 +3262,43 @@
       "take_profit_price": 355.11,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "失败",
         "returns": {
-          "return_latest_pct": 1.55,
+          "return_latest_pct": -5.51,
           "return_t1_close_pct": 1.55,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 3.54,
+          "return_t3_close_pct": -5.51,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 343.43,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 319.55,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 343.43,
             "return_pct": 1.55
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 350.16,
+            "return_pct": 3.54
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 319.55,
+            "return_pct": -5.51
           }
         ],
-        "max_gain_3d_pct": 2.09,
-        "max_drawdown_3d_pct": -2.09,
-        "hit_stop_loss": false,
+        "max_gain_3d_pct": 4.97,
+        "max_drawdown_3d_pct": -5.68,
+        "hit_stop_loss": true,
         "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     },
     {
@@ -2744,31 +3326,43 @@
       "take_profit_price": 412.1355,
       "review": {
         "status": "reviewed",
-        "result_label": "数据不足",
+        "result_label": "小亏",
         "returns": {
-          "return_latest_pct": 0.73,
+          "return_latest_pct": -2.93,
           "return_t1_close_pct": 0.73,
-          "return_t2_close_pct": null,
-          "return_t3_close_pct": null,
+          "return_t2_close_pct": 2.39,
+          "return_t3_close_pct": -2.93,
           "return_t5_close_pct": null,
           "return_t10_close_pct": null
         },
-        "latest_price": 395.36,
-        "latest_price_date": "2026-06-24",
+        "latest_price": 381.0,
+        "latest_price_date": "2026-06-26",
         "price_points": [
           {
             "trading_day_offset": "T1",
             "price_date": "2026-06-24",
             "close": 395.36,
             "return_pct": 0.73
+          },
+          {
+            "trading_day_offset": "T2",
+            "price_date": "2026-06-25",
+            "close": 401.9,
+            "return_pct": 2.39
+          },
+          {
+            "trading_day_offset": "T3",
+            "price_date": "2026-06-26",
+            "close": 381.0,
+            "return_pct": -2.93
           }
         ],
-        "max_gain_3d_pct": 1.72,
-        "max_drawdown_3d_pct": -1.49,
+        "max_gain_3d_pct": 4.41,
+        "max_drawdown_3d_pct": -2.93,
         "hit_stop_loss": false,
         "hit_take_profit": false,
-        "failure_reason": "T3 price missing",
-        "data_status": "insufficient_future_prices"
+        "failure_reason": "",
+        "data_status": "partial"
       }
     }
   ],

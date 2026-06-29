@@ -274,11 +274,18 @@ class LocalAutomationRefactorContractTests(unittest.TestCase):
         frontend_text = "\n".join(path.read_text(encoding="utf-8") for path in frontend_files)
         self.assertIn("VITE_SUPABASE_URL", frontend_text)
         self.assertIn("VITE_SUPABASE_ANON_KEY", frontend_text)
+        self.assertIn("stock_selection_prices", frontend_text)
+        self.assertIn("price_points", frontend_text)
         self.assertNotIn("SERVICE_ROLE", frontend_text.upper())
 
         netlify = (ROOT / "netlify.toml").read_text(encoding="utf-8")
         self.assertIn('base = "frontend"', netlify)
         self.assertIn('publish = "dist"', netlify)
+        self.assertIn("VITE_SUPABASE_URL", netlify)
+        self.assertIn("VITE_SUPABASE_ANON_KEY", netlify)
+        self.assertIn("dashboard_runs_index", netlify)
+        self.assertIn("dashboard_runs", netlify)
+        self.assertNotIn("SUPABASE_SERVICE_ROLE_KEY", netlify)
 
         local_config = json.loads((ROOT / "config" / "local_selection_job.json").read_text(encoding="utf-8"))
         self.assertTrue(local_config["supabase"]["enabled"])

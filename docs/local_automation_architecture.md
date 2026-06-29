@@ -20,7 +20,7 @@ The local machine owns execution and Supabase writes. Supabase owns durable prod
 - `backend.jobs.daily_selection` wraps the full daily selection flow.
 - `backend.jobs.price_refresh` wraps historical latest-price refresh and performance sync.
 - `backend.supabase_jobs` writes job state to `stock_selection_job_runs` with a local in-memory fallback for tests and dry local development.
-- `frontend/` reads `dashboard_runs_index`, `dashboard_runs`, and `v_selection_*` through the Supabase Data API with anon credentials.
+- `frontend/` reads `dashboard_runs_index`, `dashboard_runs`, and `v_selection_*` through the Supabase Data API with anon credentials, then enriches historical review rows from the safe public columns on `stock_selection_prices`.
 - In local React development, Vite serves `data/dashboard/` as a JSON fallback for offline dashboard debugging.
 
 ## Job Types
@@ -101,7 +101,7 @@ Public browser reads:
 Security rules:
 
 - `service_role` can write fact tables and job state.
-- `anon` and `authenticated` can only read public dashboard views and approved safe columns.
+- `anon` and `authenticated` can only read public dashboard views and approved safe columns, including the price-point columns needed by the frontend: `run_id`, `stock_code`, `trading_day_offset`, `price_date`, and `close`.
 - `stock_selection_job_runs` is private to `service_role`.
 - Views use `security_invoker = true`.
 - Data API grants and RLS policies are treated as separate layers.

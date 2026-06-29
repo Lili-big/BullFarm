@@ -5,6 +5,10 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  VITE_SUPABASE_URL = "https://jjexafphsjzvutstwroz.supabase.co"
+  VITE_SUPABASE_ANON_KEY = "sb_publishable_dVngZC7T9oetQhMuDCYm0Q_h8JGe-6E"
+  VITE_DASHBOARD_RUNS_INDEX_VIEW = "dashboard_runs_index"
+  VITE_DASHBOARD_RUN_DETAIL_VIEW = "dashboard_runs"
 
 [[redirects]]
   from = "/*"

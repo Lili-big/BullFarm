@@ -14,10 +14,10 @@ flowchart LR
   E["前端页面"] --> D
 ```
 
-- 前端：`frontend/`，Vite + React，生产环境只读取 Supabase 公共视图。
+- 前端：`frontend/`，Vite + React，生产环境读取 Supabase 公共视图，并从 `stock_selection_prices` 的公开安全列补取历史价格点。
 - 本机后端：`backend/`，FastAPI + 本机 job wrapper，提供健康检查、手动触发、任务状态、重试和日志查询。
 - 定时触发：Codex 自动化负责交易日唤醒并触发本机任务；本机任务会用交易日配置兜底跳过休市日。
-- 数据库：Supabase。事实表只允许 `service_role` 写入，浏览器只使用 anon key 读取公共视图。
+- 数据库：Supabase。事实表只允许 `service_role` 写入，浏览器只使用 anon key 读取公共视图和已授权的安全列。
 - 本地辅助：Excel、`outputs/` 和 `data/dashboard/` 保留为开发、验证和回放资产，不再作为生产主数据源。
 
 ## 目录
@@ -34,6 +34,7 @@ flowchart LR
 - `supabase/migrations/`：事实表、RLS、公共视图和本机 job 状态表迁移。
 - `docs/local_automation_architecture.md`：本机自动化架构说明。
 - `docs/cloud_deployment.md`：历史 Netlify + Render + Supabase 部署说明，仅作 legacy 参考。
+- `docs/netlify_stock_dashboard_release.md`: Netlify stock dashboard release check.
 
 ## 数据链路
 
@@ -43,7 +44,7 @@ flowchart LR
 4. `sync_supabase.py` 使用本机 `SUPABASE_SERVICE_ROLE_KEY` 将 run、results 写入 Supabase。
 5. Codex 自动化在交易日北京时间 16:10 触发 `daily-price-refresh`。
 6. 价格刷新 job 固定以上一交易日作为复盘日期，更新历史入选股票的最新价格、T1/T2/T3 等表现，并同步 `prices/performance`。
-7. 前端页面使用 anon key 读取 `dashboard_runs_index`、`dashboard_runs` 和 `v_selection_*` 公共视图。
+7. 前端页面使用 anon key 读取 `dashboard_runs_index`、`dashboard_runs` 和 `v_selection_*` 公共视图；历史复盘价格列额外读取 `stock_selection_prices` 的 `run_id`、`stock_code`、`trading_day_offset`、`price_date`、`close` 安全列。
 
 ## 交易日配置
 
@@ -78,6 +79,8 @@ VITE_DASHBOARD_RUNS_INDEX_VIEW=dashboard_runs_index
 VITE_DASHBOARD_RUN_DETAIL_VIEW=dashboard_runs
 VITE_ENABLE_LOCAL_FALLBACK=false
 ```
+
+Netlify `netlify.toml` 已内置浏览器安全的 Supabase URL 和 publishable key，生产构建会直接读取公共视图和安全列。
 
 不要把 `SUPABASE_SERVICE_ROLE_KEY` 放进 Netlify、`frontend/` 或任何浏览器可见文件。
 
@@ -145,7 +148,7 @@ curl -X POST "http://127.0.0.1:8000/jobs/price-refresh" `
 访问模型：
 
 - `service_role`：写入事实表、价格、表现和 job 状态。
-- `anon` / `authenticated`：只读 dashboard/public views。
+- `anon` / `authenticated`：只读 dashboard/public views，以及前端展示价格点所需的 `stock_selection_prices` 安全列。
 - `stock_selection_job_runs`：只允许 `service_role` 访问。
 
 ## 测试
