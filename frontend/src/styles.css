@@ -404,12 +404,12 @@ tbody tr:hover {
   font-weight: 650;
 }
 
-.price-cell span.good {
-  color: var(--green);
+.price-cell span.price-up {
+  color: var(--red);
 }
 
-.price-cell span.bad {
-  color: var(--red);
+.price-cell span.price-down {
+  color: var(--green);
 }
 
 .price-cell.base span {

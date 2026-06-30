@@ -129,6 +129,19 @@ function dateKey(value) {
   return match ? `${match[1]}${match[2]}${match[3]}` : text;
 }
 
+function isInternalRunLabel(value) {
+  const text = String(value || "").trim().toLowerCase();
+  return ["local", "stability_check", "稳定性检查", "用例文件"].includes(text);
+}
+
+function isPublishedDashboardRun(row) {
+  const runId = String(row.run_id || "").toLowerCase();
+  if (runId.includes("stability_check") || runId.includes("_local")) {
+    return false;
+  }
+  return !isInternalRunLabel(row.label) && !isInternalRunLabel(row.market_env);
+}
+
 function normalizeIndexPayload(payload) {
   if (Array.isArray(payload)) {
     if (payload.length && payload[0].payload) {
@@ -149,11 +162,20 @@ function normalizeIndexPayload(payload) {
         review_status: row.review_status || "missing_review",
         run_count: Number(row.run_count || 1),
       }))
-      .filter((row) => row.date);
-    runs.sort((a, b) => b.date.localeCompare(a.date));
+      .filter((row) => row.date && isPublishedDashboardRun(row));
+    runs.sort(
+      (a, b) =>
+        b.date.localeCompare(a.date) ||
+        Number(b.has_review) - Number(a.has_review) ||
+        String(b.run_id || "").localeCompare(String(a.run_id || ""))
+    );
     return { schema_version: 1, latest_date: runs[0]?.date || "", runs };
   }
   return payload || { runs: [] };
+}
+
+function runOptionValue(run) {
+  return run?.run_id || run?.date || "";
 }
 
 function normalizeDetailPayload(payload) {
@@ -177,11 +199,16 @@ async function loadIndex() {
   throw new Error("缺少 VITE_SUPABASE_URL 或 VITE_SUPABASE_ANON_KEY。");
 }
 
-async function loadDetail(runDate) {
+async function loadDetail(run) {
+  const runDate = typeof run === "string" ? run : run?.date;
+  const runId = typeof run === "string" ? "" : run?.run_id;
   if (hasSupabaseConfig()) {
+    const filter = runId
+      ? `run_id=eq.${encodeURIComponent(runId)}`
+      : `date=eq.${encodeURIComponent(runDate)}`;
     const rows = await fetchSupabaseRows(
       config.runDetailView,
-      `select=*&date=eq.${encodeURIComponent(runDate)}&limit=1`
+      `select=*&${filter}&limit=1`
     );
     return { source: "Supabase", data: await enrichDetailWithSupabasePrices(normalizeDetailPayload(rows)) };
   }
@@ -261,7 +288,7 @@ function changeTone(value) {
   if (!Number.isFinite(number) || number === 0) {
     return "";
   }
-  return number > 0 ? "good" : "bad";
+  return number > 0 ? "price-up" : "price-down";
 }
 
 function joinPresent(parts, separator = " / ") {
@@ -612,12 +639,18 @@ function HistoricalResultsView({ picks, priceStages, selectedPick, onSelectPick,
 export default function App() {
   const [index, setIndex] = useState(null);
   const [detail, setDetail] = useState(null);
-  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedRunKey, setSelectedRunKey] = useState("");
   const [source, setSource] = useState("Supabase");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filters, setFilters] = useState({ keyword: "", decision: "", sector: "", model: "", minScore: "" });
   const [selectedPickKey, setSelectedPickKey] = useState("");
+  const dateOptions = index?.runs || [];
+  const selectedRun = useMemo(
+    () => dateOptions.find((run) => runOptionValue(run) === selectedRunKey) || null,
+    [dateOptions, selectedRunKey]
+  );
+  const selectedDate = selectedRun?.date || "";
 
   useEffect(() => {
     let active = true;
@@ -627,7 +660,7 @@ export default function App() {
         if (!active) return;
         setSource(dataSource);
         setIndex(data);
-        setSelectedDate(data.latest_date || data.runs?.[0]?.date || "");
+        setSelectedRunKey(runOptionValue(data.runs?.[0]) || data.latest_date || "");
       })
       .catch((err) => {
         if (!active) return;
@@ -640,10 +673,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!selectedDate) return;
+    if (!selectedRunKey || !selectedRun) return;
     let active = true;
     setLoading(true);
-    loadDetail(selectedDate)
+    loadDetail(selectedRun)
       .then(({ source: dataSource, data }) => {
         if (!active) return;
         setSource(dataSource);
@@ -659,7 +692,7 @@ export default function App() {
     return () => {
       active = false;
     };
-  }, [selectedDate]);
+  }, [selectedRunKey, selectedRun]);
 
   const picks = useMemo(() => {
     const rows = detail?.picks || [];
@@ -678,7 +711,7 @@ export default function App() {
 
   useEffect(() => {
     setSelectedPickKey("");
-  }, [selectedDate]);
+  }, [selectedRunKey]);
 
   useEffect(() => {
     if (selectedPickKey && !picks.some((pick) => pickKey(pick) === selectedPickKey)) {
@@ -691,7 +724,6 @@ export default function App() {
   const effectiveness = detail?.strategy_effectiveness || {};
   const currentRun = detail?.run || {};
   const reviewEmpty = detail?.review?.empty_state;
-  const dateOptions = index?.runs || [];
   const latestDate = index?.latest_date || dateOptions[0]?.date || "";
   const priceStages = useMemo(() => getPriceStages(picks), [picks]);
   const hasPriceStages = priceStages.length > 0;
@@ -711,9 +743,9 @@ export default function App() {
         <div className="toolbar">
           <label>
             日期
-            <select value={selectedDate} onChange={(event) => setSelectedDate(event.target.value)}>
+            <select value={selectedRunKey} onChange={(event) => setSelectedRunKey(event.target.value)}>
               {dateOptions.map((run) => (
-                <option key={`${run.date}-${run.run_id}`} value={run.date}>
+                <option key={`${run.date}-${run.run_id}`} value={runOptionValue(run)}>
                   {run.date} {run.label ? `· ${run.label}` : ""}
                 </option>
               ))}

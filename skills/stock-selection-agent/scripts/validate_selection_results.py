@@ -2,6 +2,7 @@
 
 import argparse
 import csv
+import importlib.util
 import json
 import math
 import os
@@ -798,6 +799,61 @@ def fetch_akshare_prices(stock_code: str, selection_date: str, end_date: str | N
     return records
 
 
+def fetch_tencent_prices(stock_code: str, selection_date: str, end_date: str | None = None) -> list[PriceRecord]:
+    script_path = PROJECT_ROOT / "skills" / "stock-selection-agent" / "scripts" / "fetch_live_candidates.py"
+    spec = importlib.util.spec_from_file_location("fetch_live_candidates_for_prices", script_path)
+    if spec is None or spec.loader is None:
+        raise ValidationError(f"Unable to load Tencent price provider from {script_path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+
+    start_dt = datetime.strptime(parse_date_text(selection_date), "%Y-%m-%d").date()
+    end_text = end_date or (date.today() + timedelta(days=30)).strftime("%Y%m%d")
+    end_dt = datetime.strptime(end_text, "%Y%m%d").date()
+    history_days = max(90, (end_dt - start_dt).days * 2 + 20)
+    client = module.TencentClient()
+    raw = client.fetch_qfq_history(plain_stock_code(stock_code), end_text, history_days)
+    records: list[PriceRecord] = []
+    for _, row in raw.iterrows():
+        trade_date = parse_date_text(str(row.get("date"))[:10])
+        if trade_date < parse_date_text(selection_date):
+            continue
+        records.append(
+            PriceRecord(
+                trade_date=trade_date,
+                stock_code=normalize_stock_code(stock_code),
+                open=as_float(row.get("open")),
+                high=as_float(row.get("high")),
+                low=as_float(row.get("low")),
+                close=as_float(row.get("close")),
+                volume=None,
+                amount=as_float(row.get("amount")),
+                turnover_rate=None,
+                is_suspended=False,
+            )
+        )
+    records.sort(key=lambda item: item.trade_date)
+    return records
+
+
+def fetch_live_prices(
+    stock_code: str,
+    selection_date: str,
+    end_date: str | None,
+    provider: str,
+) -> tuple[list[PriceRecord], str]:
+    if provider == "tencent":
+        return fetch_tencent_prices(stock_code, selection_date, end_date), "tencent.qfq_kline"
+    if provider == "akshare":
+        return fetch_akshare_prices(stock_code, selection_date, end_date), "akshare.stock_zh_a_hist"
+    try:
+        return fetch_akshare_prices(stock_code, selection_date, end_date), "akshare.stock_zh_a_hist"
+    except Exception as exc:
+        print(f"Akshare price fetch failed for {stock_code}; falling back to Tencent qfq kline: {exc}", file=sys.stderr)
+        return fetch_tencent_prices(stock_code, selection_date, end_date), "tencent.qfq_kline"
+
+
 def records_for_offsets(records: list[PriceRecord], selection_date: str, offsets: list[int]) -> dict[int, PriceRecord]:
     eligible = [record for record in records if record.trade_date >= selection_date]
     eligible.sort(key=lambda item: item.trade_date)
@@ -842,8 +898,7 @@ def command_update_prices(args: argparse.Namespace) -> int:
                 price_records = price_file_records.get(code, [])
                 source = f"file:{args.price_file}"
             else:
-                price_records = fetch_akshare_prices(code, selection_date, args.end_date)
-                source = "akshare.stock_zh_a_hist"
+                price_records, source = fetch_live_prices(code, selection_date, args.end_date, args.price_provider)
             by_offset = records_for_offsets_with_latest(price_records, selection_date, offsets, args.latest)
             for offset in sorted(by_offset):
                 record = by_offset.get(offset)
@@ -1388,6 +1443,12 @@ def build_parser() -> argparse.ArgumentParser:
     update_prices.add_argument("--all", action="store_true")
     update_prices.add_argument("--offsets", default=None)
     update_prices.add_argument("--price-file", type=Path, default=None)
+    update_prices.add_argument(
+        "--price-provider",
+        default="auto",
+        choices=["auto", "akshare", "tencent"],
+        help="Live price source when --price-file is not provided.",
+    )
     update_prices.add_argument("--end-date", default=None)
     update_prices.add_argument("--latest", action="store_true", help="Also store the latest available trading day price.")
     update_prices.set_defaults(func=command_update_prices)

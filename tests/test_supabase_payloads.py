@@ -309,6 +309,59 @@ class SupabasePayloadTests(unittest.TestCase):
         self.assertEqual("600000.SH", old_result["stock_code"])
         self.assertEqual("LATEST", old_price["trading_day_offset"])
 
+    def test_include_workbook_runs_without_run_id_ignores_current_scores(self) -> None:
+        self.write_csv(
+            self.scores,
+            [
+                {
+                    "rank": "1",
+                    "symbol": "300223",
+                    "name": "Sample Tech",
+                    "sector": "Electronics",
+                    "total_score": "70",
+                    "trend_score": "40",
+                    "startup_score": "25",
+                    "sector_score": "5",
+                    "market_score": "0",
+                    "decision": "watch",
+                    "continuation": "weak",
+                    "buy_model": "breakout",
+                    "notes": "structure clear",
+                    "risks": "sector weak",
+                    "hard_rejects": "",
+                    "plan": "watch pool",
+                },
+                {
+                    "rank": "2",
+                    "symbol": "000001",
+                    "name": "Unrelated Current Score",
+                    "sector": "Bank",
+                    "total_score": "99",
+                    "trend_score": "40",
+                    "startup_score": "25",
+                    "sector_score": "25",
+                    "market_score": "9",
+                    "decision": "strong",
+                    "continuation": "strong",
+                    "buy_model": "breakout",
+                    "notes": "current artifact only",
+                    "risks": "",
+                    "hard_rejects": "",
+                    "plan": "ignore for workbook bulk sync",
+                },
+            ],
+        )
+
+        payload = sync_supabase.build_sync_payload(
+            self.make_args(run_id=None, include_workbook_runs=True)
+        )
+
+        self.assertEqual(2, len(payload.results))
+        self.assertEqual(
+            {"300223.SZ", "600000.SH"},
+            {row["stock_code"] for row in payload.results},
+        )
+
     def test_conflict_keys_and_dry_run_skip_real_write(self) -> None:
         payload = sync_supabase.build_sync_payload(self.make_args())
 
@@ -380,6 +433,8 @@ class SupabasePayloadTests(unittest.TestCase):
         self.assertIn("security_invoker", sql)
         self.assertIn("create or replace view public.dashboard_runs_index", sql)
         self.assertIn("create or replace view public.dashboard_runs", sql)
+        self.assertIn("not in ('local', 'stability_check'", sql)
+        self.assertIn("not like '%stability_check%'", sql)
         self.assertIn("price_points", sql)
         self.assertIn("stock_selection_prices pr", sql)
         self.assertIn("create or replace view public.v_selection_runs_public", sql)

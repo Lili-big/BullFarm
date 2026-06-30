@@ -1,0 +1,149 @@
+{
+  "status": "failed",
+  "run_id": "20260629_daily_v1_0",
+  "strategy_version": "v1_0",
+  "strategy_id": "v1_trend_startup",
+  "run_date": "20260629",
+  "as_of_date": "20260629",
+  "dry_run": false,
+  "started_at": "2026-06-30T13:17:00",
+  "finished_at": "2026-06-30T13:19:54",
+  "flags": {
+    "skip_live_fetch": false,
+    "skip_supabase": false,
+    "skip_price_update": false
+  },
+  "paths": {
+    "snapshot_root": "D:\\codex_workspace\\B\\data\\snapshots",
+    "daily_output_root": "D:\\codex_workspace\\B\\outputs\\daily",
+    "snapshot_dir": "D:\\codex_workspace\\B\\data\\snapshots\\20260629",
+    "output_dir": "D:\\codex_workspace\\B\\outputs\\daily\\20260629",
+    "candidate_csv": "D:\\codex_workspace\\B\\data\\snapshots\\20260629\\candidates.csv",
+    "fetch_meta": "D:\\codex_workspace\\B\\data\\snapshots\\20260629\\fetch_meta.json",
+    "report": "D:\\codex_workspace\\B\\outputs\\daily\\20260629\\selection_report.md",
+    "scores": "D:\\codex_workspace\\B\\outputs\\daily\\20260629\\selection_scores.csv",
+    "manifest": "D:\\codex_workspace\\B\\outputs\\daily\\20260629\\run_manifest.json",
+    "snapshot_latest": "D:\\codex_workspace\\B\\data\\snapshots\\latest",
+    "output_latest": "D:\\codex_workspace\\B\\outputs\\daily\\latest",
+    "legacy_scores": "D:\\codex_workspace\\B\\outputs\\selection_scores.csv",
+    "legacy_report": "D:\\codex_workspace\\B\\outputs\\selection_report.md",
+    "supabase_sql_dir": "D:\\codex_workspace\\B\\outputs\\daily\\20260629\\supabase_sql"
+  },
+  "stages": [
+    {
+      "name": "live_fetch",
+      "status": "success",
+      "command": [
+        "C:\\Python314\\python.exe",
+        "D:\\codex_workspace\\B\\skills\\stock-selection-agent\\scripts\\fetch_live_candidates.py",
+        "--provider",
+        "tencent_range",
+        "--mode",
+        "prefilter",
+        "--eastmoney-route",
+        "auto",
+        "--top",
+        "100",
+        "--max-history",
+        "500",
+        "--history-days",
+        "150",
+        "--min-amount-billion",
+        "0.5",
+        "--workers",
+        "4",
+        "--quote-batch-size",
+        "800",
+        "--end-date",
+        "20260629",
+        "--output-csv",
+        "D:\\codex_workspace\\B\\data\\snapshots\\20260629\\candidates.csv",
+        "--meta-output",
+        "D:\\codex_workspace\\B\\data\\snapshots\\20260629\\fetch_meta.json",
+        "--overwrite"
+      ],
+      "returncode": 0,
+      "stdout_tail": "Generated 100 live candidates.\nCandidate snapshot: D:\\codex_workspace\\B\\data\\snapshots\\20260629\\candidates.csv\nFetch metadata: D:\\codex_workspace\\B\\data\\snapshots\\20260629\\fetch_meta.json\n",
+      "stderr_tail": "",
+      "candidate_csv": "D:\\codex_workspace\\B\\data\\snapshots\\20260629\\candidates.csv",
+      "fetch_meta": "D:\\codex_workspace\\B\\data\\snapshots\\20260629\\fetch_meta.json"
+    },
+    {
+      "name": "score_candidates",
+      "status": "success",
+      "command": [
+        "C:\\Python314\\python.exe",
+        "D:\\codex_workspace\\B\\skills\\stock-selection-agent\\scripts\\score_candidates.py",
+        "--input",
+        "D:\\codex_workspace\\B\\data\\snapshots\\20260629\\candidates.csv",
+        "--config",
+        "D:\\codex_workspace\\B\\config\\scoring_rules.json",
+        "--output",
+        "D:\\codex_workspace\\B\\outputs\\daily\\20260629\\selection_report.md",
+        "--csv-output",
+        "D:\\codex_workspace\\B\\outputs\\daily\\20260629\\selection_scores.csv",
+        "--strategy-version",
+        "v1_0"
+      ],
+      "returncode": 0,
+      "stdout_tail": "Scored 100 candidates.\nMarkdown report: D:\\codex_workspace\\B\\outputs\\daily\\20260629\\selection_report.md\nCSV scores: D:\\codex_workspace\\B\\outputs\\daily\\20260629\\selection_scores.csv\n",
+      "stderr_tail": "",
+      "report": "D:\\codex_workspace\\B\\outputs\\daily\\20260629\\selection_report.md",
+      "scores": "D:\\codex_workspace\\B\\outputs\\daily\\20260629\\selection_scores.csv"
+    },
+    {
+      "name": "validation_snapshot",
+      "status": "skipped",
+      "reason": "disabled_in_config"
+    },
+    {
+      "name": "price_update",
+      "status": "skipped",
+      "reason": "disabled_in_config"
+    },
+    {
+      "name": "dashboard",
+      "status": "skipped",
+      "reason": "disabled_in_config"
+    },
+    {
+      "name": "supabase",
+      "status": "running",
+      "commands": [
+        {
+          "name": "supabase:1",
+          "status": "failed",
+          "command": [
+            "C:\\Python314\\python.exe",
+            "skills/stock-selection-agent/scripts/sync_supabase.py",
+            "--run-id",
+            "20260629_daily_v1_0",
+            "--selection-date",
+            "20260629",
+            "--scores",
+            "D:\\codex_workspace\\B\\outputs\\daily\\20260629\\selection_scores.csv",
+            "--candidates",
+            "D:\\codex_workspace\\B\\data\\snapshots\\20260629\\candidates.csv",
+            "--metadata",
+            "D:\\codex_workspace\\B\\data\\snapshots\\20260629\\fetch_meta.json",
+            "--report",
+            "D:\\codex_workspace\\B\\outputs\\daily\\20260629\\selection_report.md",
+            "--market-env",
+            "local",
+            "--operator",
+            "local_automation",
+            "--fail-on-skip"
+          ],
+          "returncode": 1,
+          "stdout_tail": "",
+          "stderr_tail": "Traceback (most recent call last):\n  File \"D:\\codex_workspace\\B\\skills\\stock-selection-agent\\scripts\\sync_supabase.py\", line 1065, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"D:\\codex_workspace\\B\\skills\\stock-selection-agent\\scripts\\sync_supabase.py\", line 1055, in main\n    result = execute_sync(payload, dry_run=args.dry_run, env=load_sync_env(args.env_file))\n  File \"D:\\codex_workspace\\B\\skills\\stock-selection-agent\\scripts\\sync_supabase.py\", line 902, in execute_sync\n    client.table(table).upsert(rows, on_conflict=UPSERT_CONFLICTS[table]).execute()\n    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"D:\\codex_workspace\\B\\backend\\supabase_jobs.py\", line 26, in execute\n    return self.callback()\n           ~~~~~~~~~~~~~^^\n  File \"D:\\codex_workspace\\B\\backend\\supabase_jobs.py\", line 79, in run\n    response.raise_for_status()\n    ~~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"C:\\Python314\\Lib\\site-packages\\requests\\models.py\", line 1167, in raise_for_status\n    raise HTTPError(http_error_msg, response=self)\nrequests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://jjexafphsjzvutstwroz.supabase.co/rest/v1/stock_selection_results?on_conflict=run_id%2Cstock_code\n"
+        }
+      ]
+    }
+  ],
+  "error": {
+    "type": "DailySelectionError",
+    "message": "supabase:1 failed with exit code 1.",
+    "traceback": "Traceback (most recent call last):\n  File \"D:\\codex_workspace\\B\\skills\\stock-selection-agent\\scripts\\run_daily_selection.py\", line 601, in run_daily_selection\n    handle_supabase(config.get(\"supabase\", {}), args.skip_supabase, project_root, args, manifest)\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\codex_workspace\\B\\skills\\stock-selection-agent\\scripts\\run_daily_selection.py\", line 425, in handle_supabase\n    raise DailySelectionError(f\"{command_stage['name']} failed with exit code {result.returncode}.\")\nDailySelectionError: supabase:1 failed with exit code 1.\n"
+  }
+}

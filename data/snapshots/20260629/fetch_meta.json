@@ -1,0 +1,93 @@
+{
+  "generated_at": "2026-06-30T13:17:02",
+  "source": "tencent_range",
+  "mode": "prefilter",
+  "snapshot_session": "intraday",
+  "requested_top": 100,
+  "max_history": 500,
+  "workers": 4,
+  "output_csv": "D:\\codex_workspace\\B\\data\\snapshots\\20260629\\candidates.csv",
+  "total_spot_rows": 5544,
+  "prefiltered_rows": 500,
+  "written_rows": 100,
+  "skipped": [
+    {
+      "symbol": "300274",
+      "name": "阳光电源",
+      "reason": "history_60d_pct_negative:-0.50"
+    },
+    {
+      "symbol": "300750",
+      "name": "宁德时代",
+      "reason": "history_60d_pct_negative:-3.38"
+    },
+    {
+      "symbol": "600118",
+      "name": "中国卫星",
+      "reason": "history_60d_pct_negative:-0.14"
+    },
+    {
+      "symbol": "688797",
+      "name": "C臻宝",
+      "reason": "history_rows_lt_65:4"
+    },
+    {
+      "symbol": "601899",
+      "name": "紫金矿业",
+      "reason": "history_60d_pct_negative:-20.40"
+    },
+    {
+      "symbol": "002202",
+      "name": "金风科技",
+      "reason": "history_60d_pct_negative:-21.61"
+    },
+    {
+      "symbol": "600276",
+      "name": "恒瑞医药",
+      "reason": "history_60d_pct_negative:-4.73"
+    },
+    {
+      "symbol": "002050",
+      "name": "三花智控",
+      "reason": "history_60d_pct_negative:-4.09"
+    }
+  ],
+  "api_errors": [],
+  "market": {
+    "index_pct3": "0.85",
+    "index_above_ma5_ma10": false,
+    "amount_expanding": true,
+    "limit_up_premium_good": true,
+    "limit_down_risk_low": true,
+    "large_drop_ratio": "0.0058",
+    "limit_down_count": 11,
+    "approximation": "tencent_quote_breadth"
+  },
+  "network_policy": {
+    "provider": "tencent_range",
+    "environment_proxy_policy": "preserved",
+    "direct_session_enabled": true,
+    "direct_session_trust_env": false,
+    "tencent": {
+      "tencent_route": "direct_session",
+      "trust_env": false,
+      "headers": "browser_like",
+      "batch_size": 800,
+      "retries": 3,
+      "timeout": 20,
+      "quote_batches": 18,
+      "quote_rows": 5544,
+      "history_requests": 108,
+      "history_ok": 108,
+      "history_failed": 0,
+      "quote_symbol_count": 13999,
+      "quote_scope": "common_sh_sz",
+      "include_bj": false,
+      "quote_elapsed_seconds": 51.981,
+      "history_elapsed_seconds": 109.162,
+      "elapsed_seconds": 161.322
+    },
+    "fallbacks": [],
+    "sector_route": "tencent_market_segment"
+  }
+}

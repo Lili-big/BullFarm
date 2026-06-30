@@ -16,6 +16,8 @@ from openpyxl import load_workbook
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 DEFAULT_SCORES = PROJECT_ROOT / "outputs" / "selection_scores.csv"
 DEFAULT_CANDIDATES = PROJECT_ROOT / "data" / "snapshots"
@@ -274,6 +276,13 @@ def clean_value(value: Any) -> Any:
 
 def compact_record(row: dict[str, Any]) -> dict[str, Any]:
     return {key: clean_value(value) for key, value in row.items() if clean_value(value) is not None}
+
+
+def align_bulk_rows(table: str, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    if not rows:
+        return rows
+    columns = [column for column in TABLE_COLUMNS[table] if any(column in row for row in rows)]
+    return [{column: row.get(column) for column in columns} for row in rows]
 
 
 def typed_payload_record(row: dict[str, Any]) -> dict[str, Any]:
@@ -578,6 +587,7 @@ def build_result_payloads(
     candidates: list[dict[str, Any]],
     selected_rows: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
+    synced_at = datetime.now().isoformat(timespec="seconds")
     lookup = candidate_lookup(candidates)
     selected_lookup = {normalize_stock_code(row.get("stock_code")): row for row in selected_rows}
     rows: list[dict[str, Any]] = []
@@ -633,8 +643,8 @@ def build_result_payloads(
                     "take_profit_price": as_float(score.get("take_profit_price") or selected.get("take_profit_price")),
                     "candidate_payload": typed_payload_record(candidate),
                     "score_payload": typed_payload_record(score),
-                    "created_at": selected.get("created_at"),
-                    "updated_at": datetime.now().isoformat(timespec="seconds"),
+                    "created_at": selected.get("created_at") or selected.get("updated_at") or synced_at,
+                    "updated_at": synced_at,
                 }
             )
         )
@@ -643,6 +653,7 @@ def build_result_payloads(
 
 def build_price_payloads(run_id: str, price_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
+    synced_at = datetime.now().isoformat(timespec="seconds")
     for row in price_rows:
         stock_code = normalize_stock_code(row.get("stock_code"))
         offset = clean_value(row.get("trading_day_offset"))
@@ -667,7 +678,8 @@ def build_price_payloads(run_id: str, price_rows: list[dict[str, Any]]) -> list[
                     "is_suspended": as_bool(row.get("is_suspended"), False),
                     "data_source": row.get("data_source"),
                     "price_payload": typed_payload_record(row),
-                    "updated_at": row.get("updated_at") or datetime.now().isoformat(timespec="seconds"),
+                    "created_at": row.get("created_at") or row.get("updated_at") or synced_at,
+                    "updated_at": row.get("updated_at") or synced_at,
                 }
             )
         )
@@ -676,6 +688,7 @@ def build_price_payloads(run_id: str, price_rows: list[dict[str, Any]]) -> list[
 
 def build_performance_payloads(run_id: str, performance_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
+    synced_at = datetime.now().isoformat(timespec="seconds")
     numeric_fields = {
         "total_score",
         "rank_in_run",
@@ -727,7 +740,8 @@ def build_performance_payloads(run_id: str, performance_rows: list[dict[str, Any
             "selection_date": parse_date_text(row.get("selection_date")),
             "latest_price_date": parse_date_text(row.get("latest_price_date")),
             "performance_payload": typed_payload_record(row),
-            "updated_at": row.get("updated_at") or datetime.now().isoformat(timespec="seconds"),
+            "created_at": row.get("created_at") or row.get("updated_at") or synced_at,
+            "updated_at": row.get("updated_at") or synced_at,
         }
         for field in direct_fields:
             payload[field] = row.get(field)
@@ -762,6 +776,7 @@ def build_sync_payload(args: argparse.Namespace) -> SyncPayload:
         run_ids = workbook_run_ids(workbook_rows)
         if active_run_id and active_run_id not in run_ids:
             run_ids.append(active_run_id)
+        use_artifacts_for_active_run = bool(args.run_id)
         return merge_payloads(
             [
                 build_sync_payload_for_run(
@@ -774,7 +789,7 @@ def build_sync_payload(args: argparse.Namespace) -> SyncPayload:
                     dashboard_summary_path,
                     dashboard_detail_path,
                     run_id,
-                    use_current_artifacts=(run_id == active_run_id),
+                    use_current_artifacts=(use_artifacts_for_active_run and run_id == active_run_id),
                 )
                 for run_id in run_ids
             ]
@@ -895,7 +910,7 @@ def execute_sync(payload: SyncPayload, dry_run: bool, env: dict[str, str] | None
         client = RestSupabaseClient(env["SUPABASE_URL"], env["SUPABASE_SERVICE_ROLE_KEY"])
     written: dict[str, int] = {}
     for table in TABLE_ORDER:
-        rows = payload.table_payloads()[table]
+        rows = align_bulk_rows(table, payload.table_payloads()[table])
         if not rows:
             written[table] = 0
             continue

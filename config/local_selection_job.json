@@ -70,8 +70,6 @@
         "{fetch_meta}",
         "--report",
         "{report}",
-        "--market-env",
-        "local",
         "--operator",
         "local_automation",
         "--fail-on-skip"

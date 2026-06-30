@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -252,6 +253,52 @@ class ValidationResultTests(unittest.TestCase):
         self.assertEqual(6, len(future_prices))
         self.assertEqual("2026-07-07", performance[0]["latest_price_date"])
         self.assertAlmostEqual(float(performance[0]["latest_price"]), 110.0)
+
+    def test_auto_price_provider_falls_back_to_tencent(self) -> None:
+        run_id = "20260623_153000_v1_0"
+        self.assertEqual(
+            self.run_cli(
+                "snapshot",
+                "--scores",
+                str(self.scores),
+                "--candidates",
+                str(self.candidates),
+                "--run-id",
+                run_id,
+                "--selection-date",
+                "2026-06-23",
+                "--market-env",
+                "震荡",
+            ),
+            0,
+        )
+        tencent_records = [
+            validation.PriceRecord(
+                trade_date="2026-06-23",
+                stock_code="300223.SZ",
+                open=100.0,
+                high=102.0,
+                low=99.0,
+                close=101.0,
+                volume=None,
+                amount=12000000.0,
+                turnover_rate=None,
+                is_suspended=False,
+            )
+        ]
+        with (
+            patch.object(validation, "fetch_akshare_prices", side_effect=RuntimeError("eastmoney unavailable")),
+            patch.object(validation, "fetch_tencent_prices", return_value=tencent_records),
+        ):
+            self.assertEqual(
+                self.run_cli("update-prices", "--run-id", run_id, "--offsets", "0", "--latest"),
+                0,
+            )
+
+        future_prices = self.load_records("future_prices")
+        self.assertEqual(1, len(future_prices))
+        self.assertEqual("tencent.qfq_kline", future_prices[0]["data_source"])
+        self.assertAlmostEqual(101.0, float(future_prices[0]["close"]))
 
 
 if __name__ == "__main__":

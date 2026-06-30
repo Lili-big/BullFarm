@@ -84,6 +84,8 @@ def build_price_refresh_commands(
             "update-prices",
             "--all",
             "--latest",
+            "--price-provider",
+            "tencent",
             "--end-date",
             compact_date,
         ],

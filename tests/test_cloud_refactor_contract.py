@@ -161,6 +161,7 @@ class LocalAutomationRefactorContractTests(unittest.TestCase):
         self.assertIn("validate_selection_results.py", commands[0][1])
         self.assertIn("update-prices", commands[0])
         self.assertIn("--latest", commands[0])
+        self.assertEqual("tencent", commands[0][commands[0].index("--price-provider") + 1])
         self.assertIn("analyze", commands[1])
         self.assertIn("sync_supabase.py", commands[2][1])
         self.assertIn("--include-workbook-runs", commands[2])
@@ -293,6 +294,7 @@ class LocalAutomationRefactorContractTests(unittest.TestCase):
         self.assertFalse(local_config["price_update"]["enabled"])
         command = local_config["supabase"]["commands"][0]
         self.assertIn("--fail-on-skip", command)
+        self.assertNotIn("--market-env", command)
         self.assertNotIn("--include-workbook-runs", command)
         self.assertNotIn("--write-sql-dir", command)
 

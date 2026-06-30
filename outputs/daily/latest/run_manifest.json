@@ -1,0 +1,196 @@
+{
+  "status": "success",
+  "run_id": "20260630_daily_v1_0",
+  "strategy_version": "v1_0",
+  "strategy_id": "v1_trend_startup",
+  "run_date": "20260630",
+  "as_of_date": "20260630",
+  "dry_run": false,
+  "started_at": "2026-06-30T14:15:51",
+  "finished_at": "2026-06-30T14:19:49",
+  "flags": {
+    "skip_live_fetch": false,
+    "skip_supabase": false,
+    "skip_price_update": false
+  },
+  "paths": {
+    "snapshot_root": "D:\\codex_workspace\\B\\data\\snapshots",
+    "daily_output_root": "D:\\codex_workspace\\B\\outputs\\daily",
+    "snapshot_dir": "D:\\codex_workspace\\B\\data\\snapshots\\20260630",
+    "output_dir": "D:\\codex_workspace\\B\\outputs\\daily\\20260630",
+    "candidate_csv": "D:\\codex_workspace\\B\\data\\snapshots\\20260630\\candidates.csv",
+    "fetch_meta": "D:\\codex_workspace\\B\\data\\snapshots\\20260630\\fetch_meta.json",
+    "report": "D:\\codex_workspace\\B\\outputs\\daily\\20260630\\selection_report.md",
+    "scores": "D:\\codex_workspace\\B\\outputs\\daily\\20260630\\selection_scores.csv",
+    "manifest": "D:\\codex_workspace\\B\\outputs\\daily\\20260630\\run_manifest.json",
+    "snapshot_latest": "D:\\codex_workspace\\B\\data\\snapshots\\latest",
+    "output_latest": "D:\\codex_workspace\\B\\outputs\\daily\\latest",
+    "legacy_scores": "D:\\codex_workspace\\B\\outputs\\selection_scores.csv",
+    "legacy_report": "D:\\codex_workspace\\B\\outputs\\selection_report.md",
+    "supabase_sql_dir": "D:\\codex_workspace\\B\\outputs\\daily\\20260630\\supabase_sql"
+  },
+  "stages": [
+    {
+      "name": "live_fetch",
+      "status": "success",
+      "command": [
+        "C:\\Python314\\python.exe",
+        "D:\\codex_workspace\\B\\skills\\stock-selection-agent\\scripts\\fetch_live_candidates.py",
+        "--provider",
+        "tencent_range",
+        "--mode",
+        "prefilter",
+        "--eastmoney-route",
+        "auto",
+        "--top",
+        "100",
+        "--max-history",
+        "500",
+        "--history-days",
+        "150",
+        "--min-amount-billion",
+        "0.5",
+        "--workers",
+        "4",
+        "--quote-batch-size",
+        "800",
+        "--end-date",
+        "20260630",
+        "--output-csv",
+        "D:\\codex_workspace\\B\\data\\snapshots\\20260630\\candidates.csv",
+        "--meta-output",
+        "D:\\codex_workspace\\B\\data\\snapshots\\20260630\\fetch_meta.json",
+        "--overwrite"
+      ],
+      "returncode": 0,
+      "stdout_tail": "Generated 100 live candidates.\nCandidate snapshot: D:\\codex_workspace\\B\\data\\snapshots\\20260630\\candidates.csv\nFetch metadata: D:\\codex_workspace\\B\\data\\snapshots\\20260630\\fetch_meta.json\n",
+      "stderr_tail": "",
+      "candidate_csv": "D:\\codex_workspace\\B\\data\\snapshots\\20260630\\candidates.csv",
+      "fetch_meta": "D:\\codex_workspace\\B\\data\\snapshots\\20260630\\fetch_meta.json"
+    },
+    {
+      "name": "score_candidates",
+      "status": "success",
+      "command": [
+        "C:\\Python314\\python.exe",
+        "D:\\codex_workspace\\B\\skills\\stock-selection-agent\\scripts\\score_candidates.py",
+        "--input",
+        "D:\\codex_workspace\\B\\data\\snapshots\\20260630\\candidates.csv",
+        "--config",
+        "D:\\codex_workspace\\B\\config\\scoring_rules.json",
+        "--output",
+        "D:\\codex_workspace\\B\\outputs\\daily\\20260630\\selection_report.md",
+        "--csv-output",
+        "D:\\codex_workspace\\B\\outputs\\daily\\20260630\\selection_scores.csv",
+        "--strategy-version",
+        "v1_0"
+      ],
+      "returncode": 0,
+      "stdout_tail": "Scored 100 candidates.\nMarkdown report: D:\\codex_workspace\\B\\outputs\\daily\\20260630\\selection_report.md\nCSV scores: D:\\codex_workspace\\B\\outputs\\daily\\20260630\\selection_scores.csv\n",
+      "stderr_tail": "",
+      "report": "D:\\codex_workspace\\B\\outputs\\daily\\20260630\\selection_report.md",
+      "scores": "D:\\codex_workspace\\B\\outputs\\daily\\20260630\\selection_scores.csv"
+    },
+    {
+      "name": "validation_snapshot",
+      "status": "skipped",
+      "reason": "disabled_in_config"
+    },
+    {
+      "name": "price_update",
+      "status": "skipped",
+      "reason": "disabled_in_config"
+    },
+    {
+      "name": "dashboard",
+      "status": "skipped",
+      "reason": "disabled_in_config"
+    },
+    {
+      "name": "supabase",
+      "status": "success",
+      "commands": [
+        {
+          "name": "supabase:1",
+          "status": "success",
+          "command": [
+            "C:\\Python314\\python.exe",
+            "skills/stock-selection-agent/scripts/sync_supabase.py",
+            "--run-id",
+            "20260630_daily_v1_0",
+            "--selection-date",
+            "20260630",
+            "--scores",
+            "D:\\codex_workspace\\B\\outputs\\daily\\20260630\\selection_scores.csv",
+            "--candidates",
+            "D:\\codex_workspace\\B\\data\\snapshots\\20260630\\candidates.csv",
+            "--metadata",
+            "D:\\codex_workspace\\B\\data\\snapshots\\20260630\\fetch_meta.json",
+            "--report",
+            "D:\\codex_workspace\\B\\outputs\\daily\\20260630\\selection_report.md",
+            "--market-env",
+            "local",
+            "--operator",
+            "local_automation",
+            "--fail-on-skip"
+          ],
+          "returncode": 0,
+          "stdout_tail": "{\n  \"status\": \"synced\",\n  \"counts\": {\n    \"stock_selection_runs\": 1,\n    \"stock_selection_results\": 100,\n    \"stock_selection_prices\": 0,\n    \"stock_selection_performance\": 0\n  },\n  \"conflicts\": {\n    \"stock_selection_runs\": \"run_id\",\n    \"stock_selection_results\": \"run_id,stock_code\",\n    \"stock_selection_prices\": \"run_id,stock_code,trading_day_offset\",\n    \"stock_selection_performance\": \"run_id,stock_code\"\n  },\n  \"written\": {\n    \"stock_selection_runs\": 1,\n    \"stock_selection_results\": 100,\n    \"stock_selection_prices\": 0,\n    \"stock_selection_performance\": 0\n  }\n}\n",
+          "stderr_tail": "",
+          "summary": {
+            "status": "synced",
+            "counts": {
+              "stock_selection_runs": 1,
+              "stock_selection_results": 100,
+              "stock_selection_prices": 0,
+              "stock_selection_performance": 0
+            },
+            "conflicts": {
+              "stock_selection_runs": "run_id",
+              "stock_selection_results": "run_id,stock_code",
+              "stock_selection_prices": "run_id,stock_code,trading_day_offset",
+              "stock_selection_performance": "run_id,stock_code"
+            },
+            "written": {
+              "stock_selection_runs": 1,
+              "stock_selection_results": 100,
+              "stock_selection_prices": 0,
+              "stock_selection_performance": 0
+            }
+          }
+        }
+      ],
+      "summaries": [
+        {
+          "status": "synced",
+          "counts": {
+            "stock_selection_runs": 1,
+            "stock_selection_results": 100,
+            "stock_selection_prices": 0,
+            "stock_selection_performance": 0
+          },
+          "conflicts": {
+            "stock_selection_runs": "run_id",
+            "stock_selection_results": "run_id,stock_code",
+            "stock_selection_prices": "run_id,stock_code,trading_day_offset",
+            "stock_selection_performance": "run_id,stock_code"
+          },
+          "written": {
+            "stock_selection_runs": 1,
+            "stock_selection_results": 100,
+            "stock_selection_prices": 0,
+            "stock_selection_performance": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "publish_latest",
+      "status": "success",
+      "snapshot_latest": "D:\\codex_workspace\\B\\data\\snapshots\\latest",
+      "output_latest": "D:\\codex_workspace\\B\\outputs\\daily\\latest",
+      "legacy_scores": "D:\\codex_workspace\\B\\outputs\\selection_scores.csv",
+      "legacy_report": "D:\\codex_workspace\\B\\outputs\\selection_report.md"
+    }
+  ]
+}
