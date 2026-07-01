@@ -1,8 +1,92 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-28T01:28:17",
-  "latest_date": "20260625",
+  "generated_at": "2026-07-01T13:43:06",
+  "latest_date": "20260701",
   "runs": [
+    {
+      "date": "20260701",
+      "selection_date": "2026-07-01",
+      "run_id": "20260701_daily_v1_0",
+      "label": "2026-07-01 auto",
+      "market_env": "auto",
+      "total_selected_count": 100,
+      "top_score": 96,
+      "average_score": 73.26,
+      "score_buckets": {
+        "strong": 34,
+        "trial": 48,
+        "watch": 12,
+        "avoid": 6,
+        "unknown": 0
+      },
+      "has_review": false,
+      "review_status": "missing_review",
+      "run_count": 1,
+      "json_path": "runs/20260701.json"
+    },
+    {
+      "date": "20260630",
+      "selection_date": "2026-06-30",
+      "run_id": "20260630_selection_scores",
+      "label": "2026-06-30 v1_0",
+      "market_env": "",
+      "total_selected_count": 100,
+      "top_score": 100,
+      "average_score": 79.22,
+      "score_buckets": {
+        "strong": 54,
+        "trial": 34,
+        "watch": 10,
+        "avoid": 2,
+        "unknown": 0
+      },
+      "has_review": false,
+      "review_status": "missing_review",
+      "run_count": 1,
+      "json_path": "runs/20260630.json"
+    },
+    {
+      "date": "20260629",
+      "selection_date": "2026-06-29",
+      "run_id": "20260629_selection_scores",
+      "label": "2026-06-29 v1_0",
+      "market_env": "",
+      "total_selected_count": 100,
+      "top_score": 97,
+      "average_score": 73.58,
+      "score_buckets": {
+        "strong": 39,
+        "trial": 37,
+        "watch": 17,
+        "avoid": 7,
+        "unknown": 0
+      },
+      "has_review": false,
+      "review_status": "missing_review",
+      "run_count": 1,
+      "json_path": "runs/20260629.json"
+    },
+    {
+      "date": "20260626",
+      "selection_date": "2026-06-26",
+      "run_id": "20260626_selection_scores",
+      "label": "2026-06-26 v1_0",
+      "market_env": "",
+      "total_selected_count": 100,
+      "top_score": 91,
+      "average_score": 73.29,
+      "score_buckets": {
+        "strong": 31,
+        "trial": 48,
+        "watch": 18,
+        "avoid": 3,
+        "unknown": 0
+      },
+      "has_review": false,
+      "review_status": "missing_review",
+      "run_count": 1,
+      "json_path": "runs/20260626.json"
+    },
     {
       "date": "20260625",
       "selection_date": "2026-06-25",
@@ -47,21 +131,21 @@
     }
   ],
   "strategy_effectiveness": {
-    "run_count": 3,
+    "run_count": 7,
     "reviewed_run_count": 3,
     "valid_stock_count": 103,
     "win_rate_t3": 58.49,
-    "win_rate_latest": 57.28,
-    "avg_return_latest_pct": 2.45,
+    "win_rate_latest": 55.34,
+    "avg_return_latest_pct": 3.1,
     "avg_return_t3_pct": 2.15,
-    "avg_max_drawdown_3d_pct": -5.54,
-    "hit_stop_loss_count": 42,
-    "hit_take_profit_count": 72,
+    "avg_max_drawdown_3d_pct": -5.55,
+    "hit_stop_loss_count": 51,
+    "hit_take_profit_count": 76,
     "conclusion": "正向验证"
   },
   "source": {
     "scores_dir": "D:\\codex_workspace\\B\\outputs",
     "validation_workbook": "D:\\codex_workspace\\B\\data\\validation\\output\\stock_selection_log.xlsx",
-    "run_count": 2
+    "run_count": 6
   }
 }

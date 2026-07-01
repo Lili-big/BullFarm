@@ -1,0 +1,7 @@
+interface:
+  display_name: "A-Share Short-Term Strategy"
+  short_description: "Chinese A-share short-term market and single-stock analysis"
+  default_prompt: "Use $a-share-short-term-strategy to judge market trend, sector direction, or a single A-share stock for short-term trading."
+
+policy:
+  allow_implicit_invocation: true

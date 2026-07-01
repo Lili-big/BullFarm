@@ -10,7 +10,7 @@ from typing import Any
 from uuid import uuid4
 
 from backend.settings import get_settings
-from backend.supabase_jobs import upsert_job_run, utc_now
+from backend.job_store import upsert_job_run, utc_now
 from backend.jobs.trading_calendar import (
     is_current_trading_day,
     iso_date,
@@ -91,8 +91,6 @@ def read_manifest(project_root: Path, target_date: str) -> dict[str, Any]:
 def status_from_returncode(returncode: int) -> str:
     if returncode == 0:
         return "success"
-    if returncode == 2:
-        return "pending_supabase"
     return "failed"
 
 

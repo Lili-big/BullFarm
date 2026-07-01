@@ -58,10 +58,40 @@ class DailySelectionJobTests(unittest.TestCase):
                 "report_name": "selection_report.md",
                 "scores_name": "selection_scores.csv",
             },
-            "price_update": {"enabled": False, "command": []},
-            "supabase": {"enabled": False, "command": []},
+            "validation_snapshot": {"enabled": False, "commands": []},
+            "price_update": {"enabled": False, "commands": []},
+            "dashboard": {
+                "enabled": True,
+                "commands": [
+                    [
+                        "{python}",
+                        str(ROOT / "skills" / "stock-selection-agent" / "scripts" / "build_dashboard_data.py"),
+                        "--scores-dir",
+                        "{daily_output_root}",
+                        "--validation-workbook",
+                        str(self.project_root / "missing_workbook.xlsx"),
+                        "--output-dir",
+                        str(self.project_root / "data" / "dashboard"),
+                    ]
+                ],
+            },
         }
         self.config_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    def run_job(self, *extra: str) -> int:
+        return daily.main(
+            [
+                "--project-root",
+                str(self.project_root),
+                "--config",
+                str(self.config_path),
+                *extra,
+            ]
+        )
+
+    def read_manifest(self, run_date: str) -> dict:
+        path = self.project_root / "outputs" / "daily" / run_date / "run_manifest.json"
+        return json.loads(path.read_text(encoding="utf-8"))
 
     def test_live_fetch_command_passes_tencent_tuning_options(self) -> None:
         payload = json.loads(self.config_path.read_text(encoding="utf-8"))
@@ -85,75 +115,29 @@ class DailySelectionJobTests(unittest.TestCase):
         self.assertTrue(command[command.index("--meta-output") + 1].endswith("fetch_meta.json"))
         self.assertEqual("4", command[command.index("--workers") + 1])
 
-    def enable_supabase_plugin_handoff(self) -> None:
-        payload = json.loads(self.config_path.read_text(encoding="utf-8"))
-        payload["supabase"] = {
-            "enabled": True,
-            "plugin_handoff": True,
-            "require_write": True,
-            "commands": [
-                [
-                    "{python}",
-                    str(ROOT / "skills" / "stock-selection-agent" / "scripts" / "sync_supabase.py"),
-                    "--run-id",
-                    "{run_id}",
-                    "--selection-date",
-                    "{as_of_date}",
-                    "--scores",
-                    "{scores}",
-                    "--candidates",
-                    "{candidate_csv}",
-                    "--metadata",
-                    "{fetch_meta}",
-                    "--report",
-                    "{report}",
-                    "--workbook",
-                    str(self.project_root / "missing_workbook.xlsx"),
-                    "--write-sql-dir",
-                    "{supabase_sql_dir}",
-                    "--sql-compact",
-                    "--env-file",
-                    str(self.project_root / "missing.env"),
-                ]
-            ],
-        }
-        self.config_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-
-    def run_job(self, *extra: str) -> int:
-        return daily.main(
-            [
-                "--project-root",
-                str(self.project_root),
-                "--config",
-                str(self.config_path),
-                *extra,
-            ]
-        )
-
-    def read_manifest(self, run_date: str) -> dict:
-        path = self.project_root / "outputs" / "daily" / run_date / "run_manifest.json"
-        return json.loads(path.read_text(encoding="utf-8"))
-
-    def test_skip_live_fetch_archives_outputs_and_updates_latest(self) -> None:
+    def test_skip_live_fetch_archives_outputs_updates_latest_and_dashboard(self) -> None:
         code = self.run_job(
             "--run-date",
             "2026-06-25",
             "--as-of-date",
             "2026-06-25",
             "--skip-live-fetch",
-            "--skip-supabase",
             "--skip-price-update",
         )
 
         self.assertEqual(0, code)
         snapshot_dir = self.project_root / "data" / "snapshots" / "20260625"
         output_dir = self.project_root / "outputs" / "daily" / "20260625"
+        dashboard_index = self.project_root / "data" / "dashboard" / "runs_index.json"
+        dashboard_detail = self.project_root / "data" / "dashboard" / "runs" / "20260625.json"
         self.assertTrue((snapshot_dir / "candidates.csv").exists())
         self.assertTrue((snapshot_dir / "fetch_meta.json").exists())
         self.assertTrue((output_dir / "selection_report.md").exists())
         self.assertTrue((output_dir / "selection_scores.csv").exists())
         self.assertTrue((self.project_root / "data" / "snapshots" / "latest" / "candidates.csv").exists())
         self.assertTrue((self.project_root / "outputs" / "daily" / "latest" / "selection_scores.csv").exists())
+        self.assertTrue(dashboard_index.exists())
+        self.assertTrue(dashboard_detail.exists())
 
         manifest = self.read_manifest("20260625")
         self.assertEqual("success", manifest["status"])
@@ -162,6 +146,13 @@ class DailySelectionJobTests(unittest.TestCase):
         self.assertEqual("skipped", manifest["stages"][0]["status"])
         self.assertEqual("score_candidates", manifest["stages"][1]["name"])
         self.assertEqual("success", manifest["stages"][1]["status"])
+        self.assertNotIn("supabase_sql_dir", manifest["paths"])
+
+        index = json.loads(dashboard_index.read_text(encoding="utf-8"))
+        detail = json.loads(dashboard_detail.read_text(encoding="utf-8"))
+        self.assertEqual("20260625", index["latest_date"])
+        self.assertEqual("20260625", detail["date"])
+        self.assertGreater(len(detail["picks"]), 0)
 
     def test_failure_writes_manifest_without_updating_latest(self) -> None:
         self.assertEqual(
@@ -170,7 +161,6 @@ class DailySelectionJobTests(unittest.TestCase):
                 "--run-date",
                 "20260625",
                 "--skip-live-fetch",
-                "--skip-supabase",
                 "--skip-price-update",
             ),
         )
@@ -183,7 +173,6 @@ class DailySelectionJobTests(unittest.TestCase):
             "--run-date",
             "20260626",
             "--skip-live-fetch",
-            "--skip-supabase",
             "--skip-price-update",
         )
 
@@ -228,37 +217,6 @@ class DailySelectionJobTests(unittest.TestCase):
                 project_root=self.project_root,
             ),
         )
-
-    def test_missing_supabase_env_creates_sql_bundle_and_blocks_latest_until_finalize(self) -> None:
-        self.enable_supabase_plugin_handoff()
-        code = self.run_job(
-            "--run-date",
-            "2026-06-25",
-            "--as-of-date",
-            "2026-06-25",
-            "--skip-live-fetch",
-            "--skip-price-update",
-        )
-
-        self.assertEqual(2, code)
-        manifest = self.read_manifest("20260625")
-        self.assertEqual("pending_supabase", manifest["status"])
-        self.assertIn("supabase_sql_bundle", manifest)
-        sql_dir = self.project_root / "outputs" / "daily" / "20260625" / "supabase_sql"
-        self.assertTrue((sql_dir / "manifest.json").exists())
-        self.assertFalse((self.project_root / "outputs" / "daily" / "latest").exists())
-
-        finalize_code = self.run_job(
-            "--finalize-run",
-            "2026-06-25",
-            "--verified-run-id",
-            manifest["run_id"],
-        )
-
-        self.assertEqual(0, finalize_code)
-        finalized = self.read_manifest("20260625")
-        self.assertEqual("success", finalized["status"])
-        self.assertTrue((self.project_root / "outputs" / "daily" / "latest" / "selection_scores.csv").exists())
 
 
 if __name__ == "__main__":

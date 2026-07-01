@@ -16,6 +16,7 @@ DEFAULT_SCORES_DIR = PROJECT_ROOT / "outputs"
 DEFAULT_VALIDATION_WORKBOOK = PROJECT_ROOT / "data" / "validation" / "output" / "stock_selection_log.xlsx"
 DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "data" / "dashboard"
 SCHEMA_VERSION = 1
+LATEST_OFFSET_RANK = 999999
 
 RETURN_FIELDS = [
     "return_latest_pct",
@@ -25,8 +26,6 @@ RETURN_FIELDS = [
     "return_t5_close_pct",
     "return_t10_close_pct",
 ]
-
-LATEST_OFFSET_RANK = 999999
 
 
 def now_iso() -> str:
@@ -65,23 +64,18 @@ def as_float(value: Any) -> float | None:
 
 def as_int(value: Any, default: int = 0) -> int:
     number = as_float(value)
-    if number is None:
-        return default
-    return int(number)
+    return default if number is None else int(number)
 
 
 def as_bool(value: Any) -> bool:
     if isinstance(value, bool):
         return value
-    text = clean_text(value).lower()
-    return text in {"1", "true", "yes", "y", "success", "成功"}
+    return clean_text(value).lower() in {"1", "true", "yes", "y", "success", "成功"}
 
 
 def rounded(value: Any, digits: int = 2) -> float | None:
     number = as_float(value)
-    if number is None:
-        return None
-    return round(number, digits)
+    return None if number is None else round(number, digits)
 
 
 def pct_change(close_price: Any, base_price: Any) -> float | None:
@@ -96,17 +90,13 @@ def compact_number(value: Any) -> int | float | None:
     number = as_float(value)
     if number is None:
         return None
-    if number.is_integer():
-        return int(number)
-    return round(number, 4)
+    return int(number) if number.is_integer() else round(number, 4)
 
 
 def date_key_from_text(value: Any) -> str:
     text = clean_text(value)
     match = re.search(r"(20\d{2})[-_/]?(\d{2})[-_/]?(\d{2})", text)
-    if not match:
-        return ""
-    return "".join(match.groups())
+    return "".join(match.groups()) if match else ""
 
 
 def display_date(date_key: str) -> str:
@@ -173,9 +163,9 @@ def read_workbook_records(path: Path) -> dict[str, list[dict[str, Any]]]:
                     continue
                 sheet_records.append(
                     {
-                        headers[idx]: to_json_scalar(row[idx]) if idx < len(row) else ""
-                        for idx in range(len(headers))
-                        if headers[idx]
+                        headers[index]: to_json_scalar(row[index]) if index < len(row) else ""
+                        for index in range(len(headers))
+                        if headers[index]
                     }
                 )
             records[sheet_name] = sheet_records
@@ -196,9 +186,7 @@ def offset_sort_key(value: Any) -> int:
     if text == "LATEST":
         return LATEST_OFFSET_RANK
     match = re.search(r"(\d+)", text)
-    if match:
-        return int(match.group(1))
-    return LATEST_OFFSET_RANK - 1
+    return int(match.group(1)) if match else LATEST_OFFSET_RANK - 1
 
 
 def first_present(row: dict[str, Any], *keys: str) -> str:
@@ -210,9 +198,10 @@ def first_present(row: dict[str, Any], *keys: str) -> str:
 
 
 def score_file_date(path: Path) -> str:
-    found = date_key_from_text(path.name)
-    if found:
-        return found
+    for value in (path.name, path.parent.name, str(path)):
+        found = date_key_from_text(value)
+        if found:
+            return found
     return datetime.fromtimestamp(path.stat().st_mtime).strftime("%Y%m%d")
 
 
@@ -232,12 +221,14 @@ def extract_referenced_score_paths(runs: Iterable[dict[str, Any]], project_root:
 
 
 def discover_score_files(scores_dir: Path, referenced_paths: set[Path]) -> list[Path]:
-    files = sorted(scores_dir.glob("selection_scores*.csv"))
-    dated_keys = {date_key_from_text(path.name) for path in files if date_key_from_text(path.name)}
+    candidates = list(scores_dir.glob("selection_scores*.csv"))
+    candidates.extend(path for path in scores_dir.glob("*/selection_scores*.csv") if path.parent.name != "latest")
+    candidates.extend(path for path in scores_dir.glob("daily/*/selection_scores*.csv") if path.parent.name != "latest")
+    files = sorted({path.resolve() for path in candidates})
+    dated_keys = {score_file_date(path) for path in files if date_key_from_text(path.name)}
     result: list[Path] = []
     for path in files:
-        resolved = path.resolve()
-        if resolved in referenced_paths:
+        if path in referenced_paths:
             continue
         if not date_key_from_text(path.name) and score_file_date(path) in dated_keys:
             continue
@@ -290,9 +281,8 @@ def review_from_performance(
         }
     returns = {field: rounded(row.get(field)) for field in RETURN_FIELDS}
     has_return = any(value is not None for value in returns.values())
-    status = "reviewed" if has_return else "insufficient_data"
     return {
-        "status": status,
+        "status": "reviewed" if has_return else "insufficient_data",
         "result_label": clean_text(row.get("result_label")),
         "returns": returns,
         "latest_price": rounded(row.get("latest_price"), 4),
@@ -310,22 +300,20 @@ def review_from_performance(
 def build_pick_from_score(row: dict[str, Any], rank: int, performance: dict[str, Any] | None = None) -> dict[str, Any]:
     symbol = clean_text(row.get("symbol") or row.get("stock_code"))
     stock_code = normalize_stock_code(symbol)
-    total_score = compact_number(row.get("total_score"))
-    decision = first_present(row, "decision", "participation_level", "suggested_action")
     return {
         "rank": as_int(row.get("rank"), rank),
         "symbol": symbol_from_code(symbol),
         "stock_code": stock_code,
         "name": first_present(row, "name", "stock_name"),
         "sector": first_present(row, "sector", "industry"),
-        "total_score": total_score,
+        "total_score": compact_number(row.get("total_score")),
         "score_breakdown": {
             "trend": compact_number(row.get("trend_score")),
             "startup": compact_number(row.get("startup_score")),
             "sector": compact_number(row.get("sector_score")),
             "market": compact_number(row.get("market_score")),
         },
-        "decision": decision,
+        "decision": first_present(row, "decision", "participation_level", "suggested_action"),
         "continuation": clean_text(row.get("continuation")),
         "buy_model": first_present(row, "buy_model", "strategy_label"),
         "notes": first_present(row, "notes", "selection_reason"),
@@ -333,6 +321,8 @@ def build_pick_from_score(row: dict[str, Any], rank: int, performance: dict[str,
         "hard_rejects": clean_text(row.get("hard_rejects")),
         "plan": clean_text(row.get("plan")),
         "selection_price": rounded(row.get("selection_price"), 4),
+        "stop_loss_price": rounded(row.get("stop_loss_price"), 4),
+        "take_profit_price": rounded(row.get("take_profit_price"), 4),
         "review": review_from_performance(performance),
     }
 
@@ -344,9 +334,7 @@ def build_pick_from_selected(
     price_rows: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     stock_code = normalize_stock_code(row.get("stock_code"))
-    decision = first_present(row, "participation_level", "suggested_action")
     base_price = (performance or {}).get("selection_price") or row.get("selection_price")
-    price_points = build_price_points(price_rows or [], base_price)
     return {
         "rank": as_int(row.get("rank_in_run"), rank),
         "symbol": symbol_from_code(stock_code),
@@ -354,13 +342,8 @@ def build_pick_from_selected(
         "name": clean_text(row.get("stock_name")),
         "sector": first_present(row, "sector", "industry"),
         "total_score": compact_number(row.get("total_score")),
-        "score_breakdown": {
-            "trend": None,
-            "startup": None,
-            "sector": None,
-            "market": None,
-        },
-        "decision": decision,
+        "score_breakdown": {"trend": None, "startup": None, "sector": None, "market": None},
+        "decision": first_present(row, "participation_level", "suggested_action"),
         "continuation": "",
         "buy_model": clean_text(row.get("strategy_label")),
         "notes": clean_text(row.get("selection_reason")),
@@ -370,7 +353,7 @@ def build_pick_from_selected(
         "selection_price": rounded(row.get("selection_price"), 4),
         "stop_loss_price": rounded(row.get("stop_loss_price"), 4),
         "take_profit_price": rounded(row.get("take_profit_price"), 4),
-        "review": review_from_performance(performance, price_points),
+        "review": review_from_performance(performance, build_price_points(price_rows or [], base_price)),
     }
 
 
@@ -393,9 +376,7 @@ def build_filters(picks: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]
 
 def average_score(picks: list[dict[str, Any]]) -> float | None:
     values = [as_float(pick.get("total_score")) for pick in picks if as_float(pick.get("total_score")) is not None]
-    if not values:
-        return None
-    return round(statistics.fmean(values), 2)
+    return round(statistics.fmean(values), 2) if values else None
 
 
 def top_score(picks: list[dict[str, Any]]) -> int | float | None:
@@ -434,12 +415,7 @@ def build_review_summary(summary: dict[str, Any] | None, performance_rows: list[
             },
             "summary": {},
         }
-
-    has_any_return = any(
-        as_float(row.get(field)) is not None
-        for row in performance_rows
-        for field in RETURN_FIELDS
-    )
+    has_any_return = any(as_float(row.get(field)) is not None for row in performance_rows for field in RETURN_FIELDS)
     has_t3_or_later = any(
         as_float(row.get(field)) is not None
         for row in performance_rows
@@ -451,14 +427,12 @@ def build_review_summary(summary: dict[str, Any] | None, performance_rows: list[
         status = "partial_review"
     else:
         status = "insufficient_data"
-
     empty_state = None
     if status == "insufficient_data":
         empty_state = {
             "title": "复盘数据不足",
             "message": "已有复盘记录，但后续价格不足，暂时不能判断胜率。",
         }
-
     summary = summary or {}
     return {
         "status": status,
@@ -514,21 +488,15 @@ def weighted_average_from_summaries(
             continue
         weighted_total += value * weight
         total_weight += weight
-    if total_weight <= 0:
-        return None
-    return round(weighted_total / total_weight, 2)
+    return None if total_weight <= 0 else round(weighted_total / total_weight, 2)
 
 
 def average_values(values: list[float]) -> float | None:
-    if not values:
-        return None
-    return round(sum(values) / len(values), 2)
+    return round(sum(values) / len(values), 2) if values else None
 
 
 def win_rate(values: list[float]) -> float | None:
-    if not values:
-        return None
-    return round(sum(1 for value in values if value > 0) / len(values) * 100, 2)
+    return round(sum(1 for value in values if value > 0) / len(values) * 100, 2) if values else None
 
 
 def build_strategy_effectiveness(run_payloads: list[dict[str, Any]]) -> dict[str, Any]:
@@ -565,9 +533,9 @@ def build_strategy_effectiveness(run_payloads: list[dict[str, Any]]) -> dict[str
     elif (avg_t3 or 0) > 0:
         conclusion = "小样本正收益"
     elif not t3_values and (avg_latest or 0) > 0:
-        conclusion = "最新价正向，等待T3"
+        conclusion = "最新价正向，等待 T3"
     elif not t3_values:
-        conclusion = "最新价回撤，等待T3"
+        conclusion = "最新价回撤，等待 T3"
     else:
         conclusion = "需要优化"
     return {
@@ -597,7 +565,6 @@ def build_run_payload(
     date_key = date_key_from_text(run.get("selection_date") or run_id)
     review = build_review_summary(summary, performance_rows)
     metrics = build_metrics(picks, review)
-    selection_time = clean_text(run.get("selection_time"))
     return {
         "schema_version": SCHEMA_VERSION,
         "generated_at": generated_at,
@@ -606,7 +573,7 @@ def build_run_payload(
         "run": {
             "run_id": run_id,
             "selection_date": display_date(date_key),
-            "selection_time": selection_time,
+            "selection_time": clean_text(run.get("selection_time")),
             "strategy_version": clean_text(run.get("strategy_version")) or "v1_0",
             "market_env": clean_text(run.get("market_env")),
             "total_selected_count": as_int(run.get("total_selected_count"), len(picks)),
@@ -624,44 +591,38 @@ def build_run_payload(
 
 
 def build_runs_from_workbook(records: dict[str, list[dict[str, Any]]], generated_at: str) -> list[dict[str, Any]]:
-    runs = records.get("selection_runs", [])
     selected_by_run = group_by(records.get("selected_stocks", []), "run_id")
     performance_by_run = group_by(records.get("performance", []), "run_id")
     future_prices_by_run = group_by(records.get("future_prices", []), "run_id")
     summary_by_run = {clean_text(row.get("run_id")): row for row in records.get("summary_by_run", [])}
     result: list[dict[str, Any]] = []
-    for run in runs:
+    for run in records.get("selection_runs", []):
         run_id = clean_text(run.get("run_id"))
-        selected_rows = selected_by_run.get(run_id, [])
         performance_rows = performance_by_run.get(run_id, [])
-        performance_by_code = {
-            normalize_stock_code(row.get("stock_code")): row
-            for row in performance_rows
-        }
+        performance_by_code = {normalize_stock_code(row.get("stock_code")): row for row in performance_rows}
         price_rows_by_code: dict[str, list[dict[str, Any]]] = defaultdict(list)
         for price_row in future_prices_by_run.get(run_id, []):
             price_rows_by_code[normalize_stock_code(price_row.get("stock_code"))].append(price_row)
         picks = [
             build_pick_from_selected(
                 row,
-                idx,
+                index,
                 performance_by_code.get(normalize_stock_code(row.get("stock_code"))),
                 price_rows_by_code.get(normalize_stock_code(row.get("stock_code")), []),
             )
-            for idx, row in enumerate(selected_rows, start=1)
+            for index, row in enumerate(selected_by_run.get(run_id, []), start=1)
         ]
-        if not picks:
-            continue
-        result.append(
-            build_run_payload(
-                run,
-                picks,
-                summary_by_run.get(run_id),
-                performance_rows,
-                {"type": "validation_workbook"},
-                generated_at,
+        if picks:
+            result.append(
+                build_run_payload(
+                    run,
+                    picks,
+                    summary_by_run.get(run_id),
+                    performance_rows,
+                    {"type": "validation_workbook"},
+                    generated_at,
+                )
             )
-        )
     return result
 
 
@@ -681,17 +642,8 @@ def build_runs_from_scores(scores_dir: Path, referenced_paths: set[Path], genera
             "total_selected_count": len(rows),
             "data_source": str(path),
         }
-        picks = [build_pick_from_score(row, idx) for idx, row in enumerate(rows, start=1)]
-        result.append(
-            build_run_payload(
-                run,
-                picks,
-                None,
-                [],
-                {"type": "score_csv", "path": str(path)},
-                generated_at,
-            )
-        )
+        picks = [build_pick_from_score(row, index) for index, row in enumerate(rows, start=1)]
+        result.append(build_run_payload(run, picks, None, [], {"type": "score_csv", "path": str(path)}, generated_at))
     return result
 
 
@@ -752,8 +704,8 @@ def build_dashboard(
         if date_key:
             grouped[date_key].append(payload)
 
-    runs_dir = output_dir / "runs"
     index_rows: list[dict[str, Any]] = []
+    runs_dir = output_dir / "runs"
     for date_key, date_runs in sorted(grouped.items(), reverse=True):
         active = max(date_runs, key=active_run_sort_key)
         detail = {

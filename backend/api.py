@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from backend.jobs.daily_selection import default_target_date, run_daily_selection_job
 from backend.jobs.price_refresh import default_price_date, run_price_refresh_job
 from backend.settings import get_settings
-from backend.supabase_jobs import get_job_run, list_job_runs, upsert_job_run, utc_now
+from backend.job_store import get_job_run, list_job_runs, upsert_job_run, utc_now
 
 
 app = FastAPI(title="Stock Selection Local Backend", version="2.0.0")

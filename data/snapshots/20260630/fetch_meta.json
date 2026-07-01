@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-30T14:15:53",
+  "generated_at": "2026-07-01T08:32:49",
   "source": "tencent_range",
   "mode": "prefilter",
   "snapshot_session": "intraday",
@@ -14,7 +14,7 @@
     {
       "symbol": "300750",
       "name": "宁德时代",
-      "reason": "history_60d_pct_negative:-0.41"
+      "reason": "history_60d_pct_negative:-0.45"
     },
     {
       "symbol": "688797",
@@ -24,22 +24,12 @@
     {
       "symbol": "601899",
       "name": "紫金矿业",
-      "reason": "history_60d_pct_negative:-23.22"
-    },
-    {
-      "symbol": "600118",
-      "name": "中国卫星",
-      "reason": "history_60d_pct_negative:-0.27"
+      "reason": "history_60d_pct_negative:-22.26"
     },
     {
       "symbol": "600276",
       "name": "恒瑞医药",
-      "reason": "history_60d_pct_negative:-5.73"
-    },
-    {
-      "symbol": "002202",
-      "name": "金风科技",
-      "reason": "history_60d_pct_negative:-9.13"
+      "reason": "history_60d_pct_negative:-5.42"
     },
     {
       "symbol": "001399",
@@ -49,13 +39,13 @@
   ],
   "api_errors": [],
   "market": {
-    "index_pct3": "0.79",
-    "index_above_ma5_ma10": false,
+    "index_pct3": "1.21",
+    "index_above_ma5_ma10": true,
     "amount_expanding": true,
     "limit_up_premium_good": true,
     "limit_down_risk_low": true,
-    "large_drop_ratio": "0.0070",
-    "limit_down_count": 14,
+    "large_drop_ratio": "0.0069",
+    "limit_down_count": 12,
     "approximation": "tencent_quote_breadth"
   },
   "network_policy": {
@@ -72,15 +62,15 @@
       "timeout": 20,
       "quote_batches": 18,
       "quote_rows": 5544,
-      "history_requests": 107,
-      "history_ok": 107,
+      "history_requests": 105,
+      "history_ok": 105,
       "history_failed": 0,
       "quote_symbol_count": 13999,
       "quote_scope": "common_sh_sz",
       "include_bj": false,
-      "quote_elapsed_seconds": 78.408,
-      "history_elapsed_seconds": 145.475,
-      "elapsed_seconds": 224.074
+      "quote_elapsed_seconds": 35.679,
+      "history_elapsed_seconds": 69.951,
+      "elapsed_seconds": 105.797
     },
     "fallbacks": [],
     "sector_route": "tencent_market_segment"

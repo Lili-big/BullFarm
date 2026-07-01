@@ -1,19 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 
 const config = {
-  supabaseUrl: import.meta.env.VITE_SUPABASE_URL || "",
-  supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || "",
-  runsIndexView: import.meta.env.VITE_DASHBOARD_RUNS_INDEX_VIEW || "dashboard_runs_index",
-  runDetailView: import.meta.env.VITE_DASHBOARD_RUN_DETAIL_VIEW || "dashboard_runs",
-  enableLocalFallback:
-    import.meta.env.DEV || String(import.meta.env.VITE_ENABLE_LOCAL_FALLBACK || "").toLowerCase() === "true",
   localIndexUrl: "/data/dashboard/runs_index.json",
   localRunsBaseUrl: "/data/dashboard/runs/",
 };
-
-function hasSupabaseConfig() {
-  return Boolean(config.supabaseUrl && config.supabaseAnonKey);
-}
 
 async function fetchJson(url, options = {}) {
   const response = await fetch(url, { cache: "no-store", ...options });
@@ -23,130 +13,14 @@ async function fetchJson(url, options = {}) {
   return response.json();
 }
 
-async function fetchSupabaseRows(view, query) {
-  const baseUrl = config.supabaseUrl.replace(/\/$/, "");
-  return fetchJson(`${baseUrl}/rest/v1/${view}?${query}`, {
-    headers: {
-      apikey: config.supabaseAnonKey,
-      Authorization: `Bearer ${config.supabaseAnonKey}`,
-      Accept: "application/json",
-    },
-  });
-}
-
-function normalizeStockCode(value) {
-  const text = String(value || "").trim().toUpperCase();
-  const match = text.match(/(\d{6})/);
-  if (!match) return text;
-  const code = match[1];
-  if (text.endsWith(".SH") || text.endsWith(".SZ") || text.endsWith(".BJ")) {
-    return `${code}.${text.slice(-2)}`;
-  }
-  if (code.startsWith("6") || code.startsWith("9")) return `${code}.SH`;
-  if (code.startsWith("4") || code.startsWith("8")) return `${code}.BJ`;
-  return `${code}.SZ`;
-}
-
-function numericValue(value) {
-  if (value === null || value === undefined || value === "") return null;
-  const number = Number(value);
-  return Number.isFinite(number) ? number : null;
-}
-
-function calculateReturnPct(closePrice, basePrice) {
-  const close = numericValue(closePrice);
-  const base = numericValue(basePrice);
-  if (close === null || base === null || base === 0) return null;
-  return Number((((close - base) / base) * 100).toFixed(4));
-}
-
-function pricePointOrder(offset) {
-  const text = String(offset || "").toUpperCase();
-  if (text === "LATEST") return Number.MAX_SAFE_INTEGER;
-  const match = text.match(/\d+/);
-  return match ? Number(match[0]) : Number.MAX_SAFE_INTEGER - 1;
-}
-
-function buildPricePointsFromRows(rows, basePrice) {
-  return (Array.isArray(rows) ? rows : [])
-    .filter((row) => !["T0", "0"].includes(String(row.trading_day_offset || "").toUpperCase()))
-    .map((row) => ({
-      trading_day_offset: row.trading_day_offset,
-      price_date: row.price_date,
-      close: numericValue(row.close),
-      return_pct: calculateReturnPct(row.close, basePrice),
-    }))
-    .filter((row) => row.trading_day_offset && (row.price_date || row.close !== null))
-    .sort((a, b) => {
-      const dateCompare = String(a.price_date || "").localeCompare(String(b.price_date || ""));
-      return dateCompare || pricePointOrder(a.trading_day_offset) - pricePointOrder(b.trading_day_offset);
-    });
-}
-
-async function enrichDetailWithSupabasePrices(detail) {
-  const runId = detail?.run?.run_id || detail?.active_run_id;
-  const picks = Array.isArray(detail?.picks) ? detail.picks : [];
-  if (!hasSupabaseConfig() || !runId || !picks.length) return detail;
-
-  const query = [
-    "select=stock_code,trading_day_offset,price_date,close",
-    `run_id=eq.${encodeURIComponent(runId)}`,
-    "order=stock_code.asc,price_date.asc",
-  ].join("&");
-  const priceRows = await fetchSupabaseRows("stock_selection_prices", query);
-  if (!Array.isArray(priceRows) || !priceRows.length) return detail;
-
-  const pricesByCode = new Map();
-  priceRows.forEach((row) => {
-    const code = normalizeStockCode(row.stock_code);
-    if (!code) return;
-    if (!pricesByCode.has(code)) pricesByCode.set(code, []);
-    pricesByCode.get(code).push(row);
-  });
-
-  return {
-    ...detail,
-    picks: picks.map((pick) => {
-      const code = normalizeStockCode(pick.stock_code || pick.symbol);
-      const rows = pricesByCode.get(code) || [];
-      if (!rows.length) return pick;
-      const review = pick.review || {};
-      const basePrice = review.selection_price ?? pick.selection_price;
-      return {
-        ...pick,
-        review: {
-          ...review,
-          price_points: buildPricePointsFromRows(rows, basePrice),
-        },
-      };
-    }),
-  };
-}
-
 function dateKey(value) {
   const text = String(value || "");
   const match = text.match(/(20\d{2})[-_/]?(\d{2})[-_/]?(\d{2})/);
   return match ? `${match[1]}${match[2]}${match[3]}` : text;
 }
 
-function isInternalRunLabel(value) {
-  const text = String(value || "").trim().toLowerCase();
-  return ["local", "stability_check", "稳定性检查", "用例文件"].includes(text);
-}
-
-function isPublishedDashboardRun(row) {
-  const runId = String(row.run_id || "").toLowerCase();
-  if (runId.includes("stability_check") || runId.includes("_local")) {
-    return false;
-  }
-  return !isInternalRunLabel(row.label) && !isInternalRunLabel(row.market_env);
-}
-
 function normalizeIndexPayload(payload) {
   if (Array.isArray(payload)) {
-    if (payload.length && payload[0].payload) {
-      return normalizeIndexPayload(payload[0].payload);
-    }
     const runs = payload
       .map((row) => ({
         date: dateKey(row.date || row.date_key || row.selection_date),
@@ -162,20 +36,11 @@ function normalizeIndexPayload(payload) {
         review_status: row.review_status || "missing_review",
         run_count: Number(row.run_count || 1),
       }))
-      .filter((row) => row.date && isPublishedDashboardRun(row));
-    runs.sort(
-      (a, b) =>
-        b.date.localeCompare(a.date) ||
-        Number(b.has_review) - Number(a.has_review) ||
-        String(b.run_id || "").localeCompare(String(a.run_id || ""))
-    );
+      .filter((row) => row.date);
+    runs.sort((a, b) => b.date.localeCompare(a.date) || String(b.run_id || "").localeCompare(String(a.run_id || "")));
     return { schema_version: 1, latest_date: runs[0]?.date || "", runs };
   }
   return payload || { runs: [] };
-}
-
-function runOptionValue(run) {
-  return run?.run_id || run?.date || "";
 }
 
 function normalizeDetailPayload(payload) {
@@ -189,36 +54,19 @@ function normalizeDetailPayload(payload) {
 }
 
 async function loadIndex() {
-  if (hasSupabaseConfig()) {
-    const rows = await fetchSupabaseRows(config.runsIndexView, "select=*&order=date.desc");
-    return { source: "Supabase", data: normalizeIndexPayload(rows) };
-  }
-  if (config.enableLocalFallback) {
-    return { source: "本地 JSON", data: normalizeIndexPayload(await fetchJson(config.localIndexUrl)) };
-  }
-  throw new Error("缺少 VITE_SUPABASE_URL 或 VITE_SUPABASE_ANON_KEY。");
+  return { source: "本地 JSON", data: normalizeIndexPayload(await fetchJson(config.localIndexUrl)) };
 }
 
 async function loadDetail(run) {
   const runDate = typeof run === "string" ? run : run?.date;
-  const runId = typeof run === "string" ? "" : run?.run_id;
-  if (hasSupabaseConfig()) {
-    const filter = runId
-      ? `run_id=eq.${encodeURIComponent(runId)}`
-      : `date=eq.${encodeURIComponent(runDate)}`;
-    const rows = await fetchSupabaseRows(
-      config.runDetailView,
-      `select=*&${filter}&limit=1`
-    );
-    return { source: "Supabase", data: await enrichDetailWithSupabasePrices(normalizeDetailPayload(rows)) };
-  }
-  if (config.enableLocalFallback) {
-    return {
-      source: "本地 JSON",
-      data: normalizeDetailPayload(await fetchJson(`${config.localRunsBaseUrl}${runDate}.json`)),
-    };
-  }
-  throw new Error("缺少 Supabase 公共读取配置。");
+  return {
+    source: "本地 JSON",
+    data: normalizeDetailPayload(await fetchJson(`${config.localRunsBaseUrl}${runDate}.json`)),
+  };
+}
+
+function runOptionValue(run) {
+  return run?.run_id || run?.date || "";
 }
 
 function formatValue(value) {
@@ -301,8 +149,10 @@ function pickKey(pick) {
 }
 
 function stageOrder(offset) {
-  const match = String(offset || "").match(/\d+/);
-  return match ? Number(match[0]) : Number.MAX_SAFE_INTEGER;
+  const text = String(offset || "").toUpperCase();
+  if (text === "LATEST") return Number.MAX_SAFE_INTEGER;
+  const match = text.match(/\d+/);
+  return match ? Number(match[0]) : Number.MAX_SAFE_INTEGER - 1;
 }
 
 function getPriceStages(picks) {
@@ -386,12 +236,15 @@ function PricePointsSummary({ points }) {
   }
   const text = rows
     .map((point) =>
-      joinPresent([
-        formatValue(point.trading_day_offset),
-        formatValue(point.price_date),
-        `收盘 ${formatValue(point.close)}`,
-        formatSignedPct(point.return_pct),
-      ], " ")
+      joinPresent(
+        [
+          formatValue(point.trading_day_offset),
+          formatValue(point.price_date),
+          `收盘 ${formatValue(point.close)}`,
+          formatSignedPct(point.return_pct),
+        ],
+        " "
+      )
     )
     .join("；");
   return <TruncatedText value={text} />;
@@ -501,45 +354,26 @@ function CurrentResultsTable({ picks }) {
               <tr key={pickKey(pick)}>
                 <td className="rank">#{formatValue(pick.rank)}</td>
                 <td className="target-col">
-                  <div
-                    className="target-line"
-                    title={joinPresent([pick.name, pick.stock_code || pick.symbol], " ")}
-                  >
+                  <div className="target-line" title={joinPresent([pick.name, pick.stock_code || pick.symbol], " ")}>
                     <span className="name">{formatValue(pick.name)}</span>
                     <span className="code">{formatValue(pick.stock_code || pick.symbol)}</span>
                   </div>
                 </td>
                 <td className="sector-col"><span className="chip" title={formatValue(pick.sector)}>{formatValue(pick.sector)}</span></td>
-                <td className="buy-col">
-                  <TruncatedText value={joinPresent([pick.buy_model, pick.continuation], "：")} />
-                </td>
-                <td className="plan-col">
-                  <TruncatedText value={pick.plan} />
-                </td>
-                <td className="reason-col">
-                  <TruncatedText value={pick.notes} />
-                </td>
-                <td className="risk-col">
-                  <TruncatedText value={pick.risks || pick.hard_rejects} />
-                </td>
-                <td className="price-col">
-                  <PriceSummary pick={pick} />
-                </td>
+                <td className="buy-col"><TruncatedText value={joinPresent([pick.buy_model, pick.continuation], "：")} /></td>
+                <td className="plan-col"><TruncatedText value={pick.plan} /></td>
+                <td className="reason-col"><TruncatedText value={pick.notes} /></td>
+                <td className="risk-col"><TruncatedText value={pick.risks || pick.hard_rejects} /></td>
+                <td className="price-col"><PriceSummary pick={pick} /></td>
                 <td className="score-col">
                   <div className="score">
                     <strong>{formatValue(pick.total_score)}</strong>
                     <div className="score-line"><span style={{ width: `${scoreWidth(pick.total_score)}%` }} /></div>
                   </div>
                 </td>
-                <td className="decision-col">
-                  <span className={`chip ${chipTone(pick.decision)}`}>{formatValue(pick.decision)}</span>
-                </td>
-                <td className="review-col">
-                  <ReviewSummary reviewData={reviewData} reviewStatus={reviewStatus} />
-                </td>
-                <td className="price-points-col">
-                  <PricePointsSummary points={reviewData.price_points} />
-                </td>
+                <td className="decision-col"><span className={`chip ${chipTone(pick.decision)}`}>{formatValue(pick.decision)}</span></td>
+                <td className="review-col"><ReviewSummary reviewData={reviewData} reviewStatus={reviewStatus} /></td>
+                <td className="price-points-col"><PricePointsSummary points={reviewData.price_points} /></td>
               </tr>
             );
           })}
@@ -562,7 +396,7 @@ function HistoricalResultsView({ picks, priceStages, selectedPick, onSelectPick,
               <th className="selection-price-col">入选价格</th>
               {priceStages.map((stage) => (
                 <th key={stage.offset} className="price-stage-col">
-                  <span>{stage.offset}价格</span>
+                  <span>{stage.offset} 价格</span>
                   <small>{stage.dateLabel}</small>
                 </th>
               ))}
@@ -584,17 +418,12 @@ function HistoricalResultsView({ picks, priceStages, selectedPick, onSelectPick,
                 >
                   <td className="rank">#{formatValue(pick.rank)}</td>
                   <td className="target-col">
-                    <div
-                      className="target-line"
-                      title={joinPresent([pick.name, pick.stock_code || pick.symbol], " ")}
-                    >
+                    <div className="target-line" title={joinPresent([pick.name, pick.stock_code || pick.symbol], " ")}>
                       <span className="name">{formatValue(pick.name)}</span>
                       <span className="code">{formatValue(pick.stock_code || pick.symbol)}</span>
                     </div>
                   </td>
-                  <td className="selection-price-col">
-                    <PriceChangeCell price={pick.selection_price} baseline />
-                  </td>
+                  <td className="selection-price-col"><PriceChangeCell price={pick.selection_price} baseline /></td>
                   {priceStages.map((stage) => {
                     const point = findPricePoint(reviewData.price_points, stage.offset);
                     return (
@@ -640,7 +469,7 @@ export default function App() {
   const [index, setIndex] = useState(null);
   const [detail, setDetail] = useState(null);
   const [selectedRunKey, setSelectedRunKey] = useState("");
-  const [source, setSource] = useState("Supabase");
+  const [source, setSource] = useState("本地 JSON");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filters, setFilters] = useState({ keyword: "", decision: "", sector: "", model: "", minScore: "" });
@@ -726,8 +555,7 @@ export default function App() {
   const reviewEmpty = detail?.review?.empty_state;
   const latestDate = index?.latest_date || dateOptions[0]?.date || "";
   const priceStages = useMemo(() => getPriceStages(picks), [picks]);
-  const hasPriceStages = priceStages.length > 0;
-  const isHistoricalView = Boolean(hasPriceStages || (selectedDate && latestDate && selectedDate !== latestDate));
+  const isHistoricalView = Boolean(priceStages.length > 0 || (selectedDate && latestDate && selectedDate !== latestDate));
   const selectedPick = useMemo(
     () => picks.find((pick) => pickKey(pick) === selectedPickKey) || null,
     [picks, selectedPickKey]
@@ -738,7 +566,7 @@ export default function App() {
       <header className="topbar">
         <div>
           <h1>牧牛记</h1>
-          <p className="subtitle">核心指标与明细数据来自 Supabase 公共视图。</p>
+          <p className="subtitle">核心指标、选股明细和复盘价格来自本地结构化 JSON。</p>
         </div>
         <div className="toolbar">
           <label>

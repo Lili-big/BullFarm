@@ -1,11 +1,13 @@
 name: stock-selection-agent
-version: 0.1.0
+version: 0.2.0
 language: zh-CN
 purpose: >
   Rank candidate A-share stocks for 2-3 day continuation probability using
   medium-term trend, recent 5-day startup, sector strength, and market
-  environment filters.
+  environment filters, then publish local structured dashboard data.
+
 primary_skill: skills/stock-selection-agent
+
 pipeline:
   - fetch_live_market_snapshot
   - build_trend_pool
@@ -13,19 +15,25 @@ pipeline:
   - build_sector_resonance_pool
   - apply_market_position_filter
   - output_buy_sell_plan
+  - publish_local_dashboard_json
+
 inputs:
   candidate_csv: data/sample_candidates.csv
-  live_snapshot_csv: data/snapshots/YYYYMMDD_candidates.csv
+  live_snapshot_csv: data/snapshots/YYYYMMDD/candidates.csv
   scoring_config: config/scoring_rules.json
+
 outputs:
   live_snapshot_dir: data/snapshots
   daily_snapshot_dir: data/snapshots/YYYYMMDD
   daily_output_dir: outputs/daily/YYYYMMDD
   latest_daily_snapshot: data/snapshots/latest
   latest_daily_output: outputs/daily/latest
-  live_fetch_meta: data/snapshots/YYYYMMDD_fetch_meta.json
+  job_store: outputs/jobs/job_runs.json
+  dashboard_index: data/dashboard/runs_index.json
+  dashboard_run_detail: data/dashboard/runs/YYYYMMDD.json
   markdown_report: outputs/selection_report.md
   scored_csv: outputs/selection_scores.csv
+
 data_sources:
   primary: tencent_range
   fallbacks:
@@ -35,6 +43,7 @@ data_sources:
     - tushare-pro
     - baostock
     - efinance
+
 live_fetch_defaults:
   source: tencent_range
   mode: prefilter
@@ -46,6 +55,7 @@ live_fetch_defaults:
   workers: 4
   quote_batch_size: 800
   include_bj: false
+
 daily_job:
   job_type: daily_selection
   config: config/local_selection_job.json
@@ -70,10 +80,12 @@ daily_job:
   latest_on_success:
     snapshots: data/snapshots/latest
     outputs: outputs/daily/latest
+  structured_results:
+    job_store: outputs/jobs/job_runs.json
+    dashboard_index: data/dashboard/runs_index.json
+    dashboard_detail: data/dashboard/runs/YYYYMMDD.json
   failure_manifest: outputs/daily/YYYYMMDD/run_manifest.json
-  supabase_publication_gate:
-    require_write: true
-    latest_publish_after_supabase_success: true
+
 price_refresh_job:
   job_type: price_refresh
   wrapper: backend.jobs.price_refresh
@@ -93,60 +105,28 @@ price_refresh_job:
   workflow:
     - validate_selection_results.py update-prices --all --latest
     - validate_selection_results.py analyze --all
-    - sync_supabase.py --include-workbook-runs --fail-on-skip
-local_automation:
+    - build_dashboard_data.py
+
+local_runtime:
   frontend:
-    platform: netlify
     app_dir: frontend
-    build_command: npm run build
-    publish_dir: frontend/dist
-    data_source: Supabase public views
-    required_env:
-      - VITE_SUPABASE_URL
-      - VITE_SUPABASE_ANON_KEY
+    dev_command: npm run dev
+    data_source: data/dashboard JSON
   backend:
-    platform: local
     package: backend
     api: backend.api:app
     execution_owner: local machine
     trigger_owner: Codex automation
     required_env:
-      - SUPABASE_URL
-      - SUPABASE_SERVICE_ROLE_KEY
       - ADMIN_TRIGGER_TOKEN
       - APP_TIMEZONE
-  database:
-    platform: supabase
-    public_views:
-      - dashboard_runs_index
-      - dashboard_runs
-    private_tables:
-      - stock_selection_job_runs
-legacy_cloud_deployment:
-  frontend:
-    platform: netlify
-    app_dir: frontend
-    build_command: npm run build
-    publish_dir: frontend/dist
-    data_source: Supabase public views
-    required_env:
-      - VITE_SUPABASE_URL
-      - VITE_SUPABASE_ANON_KEY
-  backend:
-    platform: render
-    package: backend
-    web_service: backend.api:app
-    status: legacy
-    cron_schedule_utc: "30 0 * * *"
-    cron_local_time: "08:30 Asia/Shanghai"
-    required_env_group: stock-selection-env
-  database:
-    platform: supabase
-    public_views:
-      - dashboard_runs_index
-      - dashboard_runs
-    private_tables:
-      - stock_selection_job_runs
+      - JOB_STORE_PATH
+  storage:
+    job_runs: outputs/jobs/job_runs.json
+    dashboard:
+      - data/dashboard/runs_index.json
+      - data/dashboard/runs/YYYYMMDD.json
+
 guardrails:
   - Do not treat single-day limit-up as sufficient.
   - Reject downtrend rebounds and liquidity failures.
@@ -154,6 +134,8 @@ guardrails:
   - Always include stop-loss conditions before any participation suggestion.
   - Keep sample_candidates.csv as an offline reproducible fixture.
   - Treat live snapshots as rule-based screening inputs, not investment advice.
+  - Frontend data must come from local dashboard JSON only.
+
 disclaimer: Rule-based screening only; not investment advice.
 
 validation:
@@ -168,4 +150,5 @@ validation:
     - analyze_profitability
     - compare_history
     - generate_validation_report
+    - publish_dashboard_json
   script: skills/stock-selection-agent/scripts/validate_selection_results.py

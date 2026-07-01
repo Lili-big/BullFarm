@@ -6,67 +6,63 @@
 
 ```mermaid
 flowchart LR
-  A["Codex 自动化<br/>定时唤醒"] --> B["本机后端/API<br/>任务控制面"]
-  B --> C["本地选股流水线<br/>抓取 -> 评分 -> 价格更新"]
-  C --> D["Supabase<br/>事实表 + 公共视图"]
-  E["前端页面"] --> D
+  A["Codex 自动化<br/>定时唤醒"] --> B["本地 API / job wrapper"]
+  B --> C["选股流水线<br/>抓取 -> 评分 -> 复盘"]
+  C --> D["本地结构化结果<br/>outputs + data/dashboard"]
+  D --> E["前端看板<br/>本地 JSON"]
 ```
 
-The local machine owns execution and Supabase writes. Supabase owns durable production data. The frontend only reads public Supabase views. Codex automations only wake up and trigger the local jobs.
+本机负责执行、归档和结构化数据发布。前端只读取 `data/dashboard/`，不依赖远端服务在线。
 
 ## Runtime Surfaces
 
-- `backend/api.py` is the local control plane.
-- `backend.jobs.daily_selection` wraps the full daily selection flow.
-- `backend.jobs.price_refresh` wraps historical latest-price refresh and performance sync.
-- `backend.supabase_jobs` writes job state to `stock_selection_job_runs` with a local in-memory fallback for tests and dry local development.
-- `frontend/` reads `dashboard_runs_index`, `dashboard_runs`, and `v_selection_*` through the Supabase Data API with anon credentials, then enriches historical review rows from the safe public columns on `stock_selection_prices`.
-- In local React development, Vite serves `data/dashboard/` as a JSON fallback for offline dashboard debugging.
+- `backend/api.py` 是本地控制面，负责手动触发、任务查询、日志查询和重试。
+- `backend.job_store` 将任务状态持久化到 `outputs/jobs/job_runs.json`。
+- `backend.jobs.daily_selection` 包装完整选股流程，并在成功后发布 `latest`。
+- `backend.jobs.price_refresh` 更新历史价格、复盘表现，并重建 dashboard JSON。
+- `frontend/` 只读取 `/data/dashboard/runs_index.json` 与 `/data/dashboard/runs/*.json`。
 
 ## Job Types
 
 ### `daily_selection`
 
-Purpose:
-
-- Fetch the market snapshot.
-- Build the candidate pool.
-- Score candidates.
-- Sync the daily run and results into Supabase.
-
-Default command:
+默认命令：
 
 ```powershell
 python -m backend.jobs.daily_selection --trigger-source codex_automation
 ```
 
-The wrapper defaults to `config/local_selection_job.json`, which disables local dashboard generation and historical price update. Those belong to the separate price-refresh job.
+任务内容：
 
-When triggered by Codex automation or cron without an explicit date, the wrapper only runs on trading days. Non-trading-day wakeups are recorded as successful skipped jobs with `result_payload.skipped=true`.
+- 判断目标交易日。
+- 抓取行情并生成候选池。
+- 执行评分。
+- 写入 validation workbook。
+- 重建 `data/dashboard/`。
+- 成功后更新 `outputs/daily/latest` 和 `data/snapshots/latest`。
 
 ### `price_refresh`
 
-Purpose:
-
-- Refresh latest forward prices for historical selections.
-- Recompute performance sheets.
-- Sync price and performance tables into Supabase.
-
-Default command:
+默认命令：
 
 ```powershell
 python -m backend.jobs.price_refresh --trigger-source codex_automation
 ```
 
-By default it targets the previous trading day as the review date. When triggered by Codex automation or cron without an explicit date, non-trading-day wakeups are recorded as successful skipped jobs and no price pipeline is started.
+任务内容：
+
+- 刷新历史入选股票的后续价格。
+- 重算收益、止盈止损和复盘结果。
+- 重建 `data/dashboard/`。
+- 写入本地 job 状态。
 
 ### Trading Calendar
 
-`backend.jobs.trading_calendar` reads `config/trading_calendar.json`. The fallback rule treats weekdays as trading days and weekends as closed. Add official exchange holidays to `holidays`; add exceptional open dates to `makeup_trading_days`; use `trading_days` only when a fully explicit allow-list is needed.
+`backend.jobs.trading_calendar` 读取 `config/trading_calendar.json`。自动化触发且未指定日期时，非交易日会记录成功跳过，不启动选股或价格流水线。
 
 ## API Endpoints
 
-All non-health endpoints require `ADMIN_TRIGGER_TOKEN` through `Authorization: Bearer ...` or `X-Admin-Token`.
+除健康检查外，接口都需要 `ADMIN_TRIGGER_TOKEN`：
 
 - `GET /health`
 - `POST /jobs/daily-selection`
@@ -76,55 +72,29 @@ All non-health endpoints require `ADMIN_TRIGGER_TOKEN` through `Authorization: B
 - `GET /jobs/{job_id}/logs`
 - `POST /jobs/{job_id}/retry`
 
-The retry endpoint creates a new job record and increments `attempt_no`; it does not mutate the failed job.
+## Local Data Contract
 
-## Supabase Contract
+- `outputs/jobs/job_runs.json`：任务状态、日志摘要、错误信息和结果 payload。
+- `outputs/daily/<YYYYMMDD>/run_manifest.json`：单次选股流水线执行详情。
+- `outputs/daily/<YYYYMMDD>/selection_scores.csv`：评分结果。
+- `outputs/daily/<YYYYMMDD>/selection_report.md`：Markdown 报告。
+- `data/snapshots/<YYYYMMDD>/candidates.csv`：候选池快照。
+- `data/dashboard/runs_index.json`：页面日期索引。
+- `data/dashboard/runs/<YYYYMMDD>.json`：页面单日详情，包含 picks、metrics、review、price_points。
 
-Facts and private state:
-
-- `stock_selection_runs`
-- `stock_selection_results`
-- `stock_selection_prices`
-- `stock_selection_performance`
-- `stock_selection_job_runs`
-
-Public browser reads:
-
-- `dashboard_runs_index`
-- `dashboard_runs`
-- `v_selection_runs_public`
-- `v_selection_results_public`
-- `v_selection_performance_public`
-- `v_selection_summary_by_run_public`
-- `v_selection_strategy_effectiveness_public`
-
-Security rules:
-
-- `service_role` can write fact tables and job state.
-- `anon` and `authenticated` can only read public dashboard views and approved safe columns, including the price-point columns needed by the frontend: `run_id`, `stock_code`, `trading_day_offset`, `price_date`, and `close`.
-- `stock_selection_job_runs` is private to `service_role`.
-- Views use `security_invoker = true`.
-- Data API grants and RLS policies are treated as separate layers.
-
-## Publication Safety Gate
-
-The daily selection script publishes `outputs/daily/latest` only after the Supabase stage succeeds. If the Supabase write fails, the run stays failed or pending and `latest` is not replaced.
-
-The price refresh job does not publish `latest`; it only updates historical price/performance records and the job status.
+失败的日度任务只写对应日期 manifest，不覆盖 `latest`。
 
 ## Codex Automations
 
-Two trading-day cron automations are expected:
+预期有两个本地 cron automation：
 
-- `daily-full-selection`: trading days, Beijing time 08:30.
-- `daily-price-refresh`: trading days, Beijing time 16:10.
+- `daily-full-selection`：交易日北京时间 08:30。
+- `daily-price-refresh`：交易日北京时间 16:10。
 
-Each automation should:
+每次自动化应：
 
-1. Check that the workspace is `D:\codex_workspace\B`.
-2. Check that `config/local.env` contains Supabase server-side credentials.
-3. Trigger the local job through the API if the local server is running; otherwise run the module command directly.
-4. Verify the resulting `stock_selection_job_runs` record. If the job was skipped because the local date is not a trading day, report the skip reason instead of treating it as a failure.
-5. Report the job id, target date, status, and any failure log excerpt.
-
-Do not put `SUPABASE_SERVICE_ROLE_KEY` in frontend files, Netlify variables, or documentation examples.
+1. 确认工作区是 `D:\codex_workspace\B`。
+2. 检查 `config/local.env` 是否存在且包含 `ADMIN_TRIGGER_TOKEN`、`APP_TIMEZONE`、`JOB_STORE_PATH`。
+3. 优先通过本地 API 触发；本地 API 未运行时，直接运行对应 `python -m backend.jobs.*` 命令。
+4. 查询 `outputs/jobs/job_runs.json` 或命令输出，报告 job_id、target_date、status、run_id、attempt_no。
+5. 失败时读取 job 日志摘要或 `outputs/daily/<date>/run_manifest.json`，报告失败阶段和下一步建议。

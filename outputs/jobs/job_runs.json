@@ -1,0 +1,22 @@
+{
+  "jobs": [
+    {
+      "job_id": "c006e824-8b61-41bc-bc82-ae7c66bb496a",
+      "job_type": "daily_selection",
+      "trigger_source": "codex_automation",
+      "triggered_by": "daily-full-selection",
+      "attempt_no": 1,
+      "pipeline_version": "local_v1",
+      "target_date": "2026-06-30",
+      "status": "running",
+      "dry_run": false,
+      "request_payload": {},
+      "started_at": "2026-07-01T05:46:39.913529+00:00",
+      "result_payload": {},
+      "created_at": "2026-07-01T05:46:39.913529+00:00",
+      "updated_at": "2026-07-01T05:46:39.913604+00:00"
+    }
+  ],
+  "schema_version": 1,
+  "updated_at": "2026-07-01T05:46:39.915330+00:00"
+}

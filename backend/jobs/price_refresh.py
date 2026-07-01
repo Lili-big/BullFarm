@@ -10,7 +10,7 @@ from typing import Any
 from uuid import uuid4
 
 from backend.settings import get_settings
-from backend.supabase_jobs import upsert_job_run, utc_now
+from backend.job_store import upsert_job_run, utc_now
 from backend.jobs.trading_calendar import (
     is_current_trading_day,
     iso_date,
@@ -23,7 +23,7 @@ from backend.jobs.trading_calendar import (
 JOB_TYPE = "price_refresh"
 PIPELINE_VERSION = "local_v1"
 VALIDATION_SCRIPT = Path("skills/stock-selection-agent/scripts/validate_selection_results.py")
-SYNC_SCRIPT = Path("skills/stock-selection-agent/scripts/sync_supabase.py")
+DASHBOARD_SCRIPT = Path("skills/stock-selection-agent/scripts/build_dashboard_data.py")
 SCHEDULED_TRIGGER_SOURCES = {"codex_automation", "cron"}
 
 
@@ -97,13 +97,7 @@ def build_price_refresh_commands(
         ],
         [
             sys.executable,
-            str(root / SYNC_SCRIPT),
-            "--include-workbook-runs",
-            "--operator",
-            "local_automation",
-            "--notes",
-            f"price_refresh:{compact_date}",
-            "--fail-on-skip",
+            str(root / DASHBOARD_SCRIPT),
         ],
     ]
     if dry_run:

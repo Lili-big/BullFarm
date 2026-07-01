@@ -60,15 +60,10 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "validation_snapshot": {"enabled": False, "commands": []},
     "price_update": {"enabled": False, "command": []},
     "dashboard": {"enabled": False, "command": []},
-    "supabase": {"enabled": False, "command": []},
 }
 
 
 class DailySelectionError(RuntimeError):
-    pass
-
-
-class PendingSupabaseWrite(DailySelectionError):
     pass
 
 
@@ -369,78 +364,6 @@ def handle_optional_command(
     stage["status"] = "success"
 
 
-def parse_command_json(stdout: str) -> dict[str, Any]:
-    text = stdout.strip()
-    if not text:
-        return {}
-    start = text.find("{")
-    end = text.rfind("}")
-    if start < 0 or end < start:
-        return {}
-    try:
-        return json.loads(text[start : end + 1])
-    except json.JSONDecodeError:
-        return {}
-
-
-def handle_supabase(
-    section: dict[str, Any],
-    skip: bool,
-    project_root: Path,
-    args: argparse.Namespace,
-    manifest: dict[str, Any],
-) -> None:
-    name = "supabase"
-    if skip:
-        manifest["stages"].append(stage_record(name, "skipped", reason="--skip-supabase"))
-        return
-    if not section.get("enabled", False):
-        manifest["stages"].append(stage_record(name, "skipped", reason="disabled_in_config"))
-        return
-    raw_commands = section.get("commands") or []
-    if not raw_commands and section.get("command"):
-        raw_commands = [section.get("command")]
-    if not raw_commands:
-        raise DailySelectionError("supabase is enabled but no command is configured.")
-
-    stage = stage_record(name, "running")
-    manifest["stages"].append(stage)
-    stage["commands"] = []
-    summaries: list[dict[str, Any]] = []
-    for raw_command in raw_commands:
-        command_stage = stage_record(f"{name}:{len(stage['commands']) + 1}", "running")
-        stage["commands"].append(command_stage)
-        command = expand_command(raw_command, project_root, args.run_date, args.as_of_date, manifest)
-        command_stage["command"] = command
-        result = subprocess.run(command, cwd=project_root, capture_output=True, text=True, check=False)
-        command_stage["returncode"] = result.returncode
-        command_stage["stdout_tail"] = tail(result.stdout)
-        command_stage["stderr_tail"] = tail(result.stderr)
-        summary = parse_command_json(result.stdout)
-        if summary:
-            command_stage["summary"] = summary
-            summaries.append(summary)
-        if result.returncode != 0:
-            command_stage["status"] = "failed"
-            raise DailySelectionError(f"{command_stage['name']} failed with exit code {result.returncode}.")
-        command_stage["status"] = "success"
-
-    stage["summaries"] = summaries
-    skipped = [summary for summary in summaries if summary.get("status") == "skipped"]
-    if skipped and section.get("plugin_handoff", False):
-        stage["status"] = "pending_plugin_write"
-        stage["reason"] = skipped[-1].get("reason")
-        latest_bundle = next((summary.get("sql_bundle") for summary in reversed(summaries) if summary.get("sql_bundle")), None)
-        if latest_bundle:
-            stage["sql_bundle"] = latest_bundle
-            manifest["supabase_sql_bundle"] = latest_bundle
-        raise PendingSupabaseWrite(stage.get("reason") or "Supabase write requires plugin execution.")
-    if skipped and section.get("require_write", False):
-        stage["status"] = "failed"
-        raise DailySelectionError(skipped[-1].get("reason") or "Supabase sync skipped.")
-    stage["status"] = "success"
-
-
 def planned_manifest(args: argparse.Namespace, project_root: Path, config: dict[str, Any]) -> dict[str, Any]:
     paths = build_paths(project_root, config, args.run_date)
     manifest = base_manifest(args, paths, config)
@@ -451,7 +374,6 @@ def planned_manifest(args: argparse.Namespace, project_root: Path, config: dict[
         stage_record("validation_snapshot", "planned"),
         stage_record("price_update", "planned", skipped=args.skip_price_update),
         stage_record("dashboard", "planned"),
-        stage_record("supabase", "planned", skipped=args.skip_supabase),
         stage_record("publish_latest", "planned"),
     ]
     manifest["planned_commands"] = {
@@ -501,7 +423,6 @@ def build_paths(project_root: Path, config: dict[str, Any], run_date: str) -> di
         "output_latest": output_root / latest_name,
         "legacy_scores": project_root / "outputs" / "selection_scores.csv",
         "legacy_report": project_root / "outputs" / "selection_report.md",
-        "supabase_sql_dir": output_dir / "supabase_sql",
     }
 
 
@@ -533,7 +454,6 @@ def base_manifest(args: argparse.Namespace, paths: dict[str, Path], config: dict
         "finished_at": None,
         "flags": {
             "skip_live_fetch": bool(args.skip_live_fetch),
-            "skip_supabase": bool(args.skip_supabase),
             "skip_price_update": bool(args.skip_price_update),
         },
         "paths": {key: json_path(value) for key, value in paths.items()},
@@ -597,19 +517,9 @@ def run_daily_selection(args: argparse.Namespace) -> int:
             args,
             manifest,
         )
-        write_json(paths["manifest"], manifest)
-        handle_supabase(config.get("supabase", {}), args.skip_supabase, project_root, args, manifest)
         manifest["status"] = "success"
         publish_latest(paths, manifest)
         return_code = 0
-    except PendingSupabaseWrite as exc:
-        manifest["status"] = "pending_supabase"
-        manifest["pending"] = {
-            "type": "supabase_plugin_write",
-            "message": str(exc),
-            "next_step": "Execute the SQL files listed in supabase_sql_bundle, verify public views, then run --finalize-run.",
-        }
-        return_code = 2
     except Exception as exc:
         manifest["status"] = "failed"
         manifest["error"] = {
@@ -627,36 +537,6 @@ def run_daily_selection(args: argparse.Namespace) -> int:
     return return_code
 
 
-def finalize_run(args: argparse.Namespace) -> int:
-    project_root = args.project_root.resolve()
-    config_path = resolve_path(project_root, args.config)
-    config = load_config(config_path)
-    paths = build_paths(project_root, config, args.finalize_run)
-    if not paths["manifest"].exists():
-        raise DailySelectionError(f"Manifest not found: {paths['manifest']}")
-    manifest = read_json(paths["manifest"])
-    if args.verified_run_id and str(manifest.get("run_id")) != args.verified_run_id:
-        raise DailySelectionError(
-            f"Verified run_id {args.verified_run_id!r} does not match manifest run_id {manifest.get('run_id')!r}."
-        )
-    manifest["status"] = "success"
-    manifest["supabase_verified_at"] = datetime.now().isoformat(timespec="seconds")
-    manifest["stages"].append(
-        stage_record(
-            "supabase_plugin_verify",
-            "success",
-            verified_run_id=args.verified_run_id or manifest.get("run_id"),
-        )
-    )
-    publish_latest(paths, manifest)
-    manifest["finished_at"] = datetime.now().isoformat(timespec="seconds")
-    write_json(paths["manifest"], manifest)
-    if paths["output_latest"].exists():
-        copy_file(paths["manifest"], paths["output_latest"] / "run_manifest.json")
-    print(json.dumps(manifest, ensure_ascii=False, indent=2))
-    return 0
-
-
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run the daily stock-selection orchestration job.")
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG_PATH, help="Daily selection config JSON path.")
@@ -670,18 +550,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Market data date passed to live fetch; defaults to --run-date.",
     )
     parser.add_argument("--skip-live-fetch", action="store_true", help="Use an existing or fixture candidate CSV.")
-    parser.add_argument("--skip-supabase", action="store_true", help="Skip Supabase upload/publish stage.")
     parser.add_argument("--skip-price-update", action="store_true", help="Skip validation price-update stage.")
-    parser.add_argument("--finalize-run", type=parse_date, help="Publish latest for a run after Supabase plugin verification.")
-    parser.add_argument("--verified-run-id", help="Run id verified in Supabase before finalizing.")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    if args.finalize_run:
-        return finalize_run(args)
     if args.as_of_date is None:
         args.as_of_date = latest_complete_market_date(args.run_date, project_root=args.project_root.resolve())
     return run_daily_selection(args)

@@ -34,6 +34,7 @@ class DashboardDataContractTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def write_csv(self, path: Path, rows: list[dict[str, object]]) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("w", encoding="utf-8-sig", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
             writer.writeheader()
@@ -63,7 +64,6 @@ class DashboardDataContractTests(unittest.TestCase):
                     "data_source": "scores=outputs\\reviewed_scores.csv; candidates=data\\snapshots\\20260624_candidates.csv",
                     "operator": "test",
                     "notes": "",
-                    "created_at": "2026-06-24 15:10:00",
                 }
             ],
         )
@@ -74,48 +74,38 @@ class DashboardDataContractTests(unittest.TestCase):
                 {
                     "run_id": "20260624_reviewed_v1_0",
                     "selection_date": "2026-06-24",
-                    "selection_time": "15:10:00",
                     "stock_code": "300001.SZ",
                     "stock_name": "测试科技",
                     "sector": "AI应用",
                     "industry": "AI应用",
-                    "concept": "",
                     "strategy_label": "平台突破买点",
                     "participation_level": "轻仓试错",
                     "suggested_action": "轻仓试错",
                     "selection_price": 10,
-                    "selection_close": 10,
                     "selection_reason": "平台突破",
                     "stop_loss_price": 9.7,
                     "take_profit_price": 10.5,
                     "risk_note": "市场量能不足",
                     "total_score": 72,
                     "rank_in_run": 1,
-                    "price_missing": False,
-                    "created_at": "2026-06-24 15:10:00",
                 },
                 {
                     "run_id": "20260624_reviewed_v1_0",
                     "selection_date": "2026-06-24",
-                    "selection_time": "15:10:00",
                     "stock_code": "600002.SH",
                     "stock_name": "测试电力",
                     "sector": "电网设备",
                     "industry": "电网设备",
-                    "concept": "",
                     "strategy_label": "趋势回踩买点",
                     "participation_level": "只观察",
                     "suggested_action": "只观察",
                     "selection_price": 20,
-                    "selection_close": 20,
                     "selection_reason": "趋势回踩",
                     "stop_loss_price": 19.4,
                     "take_profit_price": 21,
                     "risk_note": "",
                     "total_score": 61,
                     "rank_in_run": 2,
-                    "price_missing": False,
-                    "created_at": "2026-06-24 15:10:00",
                 },
             ],
         )
@@ -128,13 +118,6 @@ class DashboardDataContractTests(unittest.TestCase):
                     "selection_date": "2026-06-24",
                     "stock_code": "300001.SZ",
                     "stock_name": "测试科技",
-                    "sector": "AI应用",
-                    "industry": "AI应用",
-                    "concept": "",
-                    "strategy_label": "平台突破买点",
-                    "participation_level": "轻仓试错",
-                    "total_score": 72,
-                    "rank_in_run": 1,
                     "selection_price": 10,
                     "latest_price": 10.8,
                     "latest_price_date": "2026-06-29",
@@ -142,8 +125,6 @@ class DashboardDataContractTests(unittest.TestCase):
                     "return_t1_close_pct": 2,
                     "return_t2_close_pct": 4,
                     "return_t3_close_pct": 8,
-                    "return_t5_close_pct": "",
-                    "return_t10_close_pct": "",
                     "max_gain_3d_pct": 9,
                     "max_drawdown_3d_pct": -1,
                     "hit_stop_loss": False,
@@ -151,20 +132,12 @@ class DashboardDataContractTests(unittest.TestCase):
                     "result_label": "成功",
                     "failure_reason": "",
                     "data_status": "ok",
-                    "updated_at": "2026-06-29 16:00:00",
                 },
                 {
                     "run_id": "20260624_reviewed_v1_0",
                     "selection_date": "2026-06-24",
                     "stock_code": "600002.SH",
                     "stock_name": "测试电力",
-                    "sector": "电网设备",
-                    "industry": "电网设备",
-                    "concept": "",
-                    "strategy_label": "趋势回踩买点",
-                    "participation_level": "只观察",
-                    "total_score": 61,
-                    "rank_in_run": 2,
                     "selection_price": 20,
                     "latest_price": 19,
                     "latest_price_date": "2026-06-29",
@@ -172,8 +145,6 @@ class DashboardDataContractTests(unittest.TestCase):
                     "return_t1_close_pct": -1,
                     "return_t2_close_pct": -3,
                     "return_t3_close_pct": -5,
-                    "return_t5_close_pct": "",
-                    "return_t10_close_pct": "",
                     "max_gain_3d_pct": 1,
                     "max_drawdown_3d_pct": -6,
                     "hit_stop_loss": True,
@@ -181,7 +152,6 @@ class DashboardDataContractTests(unittest.TestCase):
                     "result_label": "失败",
                     "failure_reason": "T3亏损",
                     "data_status": "ok",
-                    "updated_at": "2026-06-29 16:00:00",
                 },
             ],
         )
@@ -193,73 +163,25 @@ class DashboardDataContractTests(unittest.TestCase):
                     "run_id": "20260624_reviewed_v1_0",
                     "selection_date": "2026-06-24",
                     "stock_code": "300001.SZ",
-                    "stock_name": "????",
                     "trading_day_offset": "T1",
                     "price_date": "2026-06-25",
-                    "open": 10.1,
-                    "high": 10.4,
-                    "low": 10.0,
                     "close": 10.2,
-                    "volume": 100000,
-                    "amount": 1020000,
-                    "turnover_rate": 2.1,
-                    "is_suspended": False,
-                    "data_source": "unit",
-                    "updated_at": "2026-06-25 16:00:00",
                 },
                 {
                     "run_id": "20260624_reviewed_v1_0",
                     "selection_date": "2026-06-24",
                     "stock_code": "300001.SZ",
-                    "stock_name": "????",
                     "trading_day_offset": "T2",
                     "price_date": "2026-06-26",
-                    "open": 10.3,
-                    "high": 10.6,
-                    "low": 10.2,
                     "close": 10.4,
-                    "volume": 100000,
-                    "amount": 1040000,
-                    "turnover_rate": 2.2,
-                    "is_suspended": False,
-                    "data_source": "unit",
-                    "updated_at": "2026-06-26 16:00:00",
                 },
                 {
                     "run_id": "20260624_reviewed_v1_0",
                     "selection_date": "2026-06-24",
                     "stock_code": "300001.SZ",
-                    "stock_name": "????",
                     "trading_day_offset": "T3",
                     "price_date": "2026-06-29",
-                    "open": 10.5,
-                    "high": 10.9,
-                    "low": 10.4,
                     "close": 10.8,
-                    "volume": 100000,
-                    "amount": 1080000,
-                    "turnover_rate": 2.3,
-                    "is_suspended": False,
-                    "data_source": "unit",
-                    "updated_at": "2026-06-29 16:00:00",
-                },
-                {
-                    "run_id": "20260624_reviewed_v1_0",
-                    "selection_date": "2026-06-24",
-                    "stock_code": "600002.SH",
-                    "stock_name": "????",
-                    "trading_day_offset": "T1",
-                    "price_date": "2026-06-25",
-                    "open": 19.9,
-                    "high": 20.1,
-                    "low": 19.7,
-                    "close": 19.8,
-                    "volume": 100000,
-                    "amount": 1980000,
-                    "turnover_rate": 1.2,
-                    "is_suspended": False,
-                    "data_source": "unit",
-                    "updated_at": "2026-06-25 16:00:00",
                 },
             ],
         )
@@ -270,25 +192,15 @@ class DashboardDataContractTests(unittest.TestCase):
                 {
                     "run_id": "20260624_reviewed_v1_0",
                     "selection_date": "2026-06-24",
-                    "strategy_version": "v1_0",
-                    "market_env": "震荡",
-                    "total_selected_count": 2,
                     "valid_stock_count": 2,
-                    "win_rate_t1": 50,
-                    "win_rate_t2": 50,
                     "win_rate_t3": 50,
-                    "win_rate_t5": "",
-                    "avg_return_t1_pct": 0.5,
-                    "avg_return_t2_pct": 0.5,
                     "avg_return_t3_pct": 1.5,
-                    "avg_return_t5_pct": "",
                     "avg_max_drawdown_3d_pct": -3.5,
                     "hit_stop_loss_count": 1,
                     "hit_take_profit_count": 1,
                     "best_stock": "测试科技",
                     "worst_stock": "测试电力",
                     "conclusion": "样例结论",
-                    "updated_at": "2026-06-29 16:00:00",
                 }
             ],
         )
@@ -297,7 +209,7 @@ class DashboardDataContractTests(unittest.TestCase):
     def test_builds_index_and_daily_payloads_without_network(self) -> None:
         self.make_validation_workbook()
         self.write_csv(
-            self.scores_dir / "selection_scores_20260625.csv",
+            self.scores_dir / "daily" / "20260625" / "selection_scores.csv",
             [
                 {
                     "rank": 1,
@@ -315,7 +227,7 @@ class DashboardDataContractTests(unittest.TestCase):
                     "notes": "趋势清晰",
                     "risks": "",
                     "hard_rejects": "",
-                    "plan": "小仓试错",
+                    "plan": "轻仓试错",
                 }
             ],
         )
@@ -358,14 +270,15 @@ class DashboardDataContractTests(unittest.TestCase):
         self.assertEqual(81, missing["metrics"]["top_score"])
         self.assertEqual("正向验证", missing["strategy_effectiveness"]["conclusion"])
 
-    def test_react_frontend_serves_local_dashboard_data_in_dev(self) -> None:
+    def test_react_frontend_serves_local_dashboard_data_in_dev_and_preview(self) -> None:
         config = (ROOT / "frontend" / "vite.config.js").read_text(encoding="utf-8")
 
         self.assertIn("local-dashboard-data", config)
         self.assertIn("/data/dashboard/", config)
         self.assertIn("dashboardDataRoot", config)
+        self.assertIn("configurePreviewServer", config)
         self.assertIn("@vitejs/plugin-react", config)
-        self.assertNotIn("service_role", config.lower())
+        self.assertNotIn("supabase", config.lower())
 
 
 if __name__ == "__main__":

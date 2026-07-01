@@ -39,40 +39,38 @@
     "scores_name": "selection_scores.csv"
   },
   "validation_snapshot": {
-    "enabled": false,
-    "commands": []
+    "enabled": true,
+    "commands": [
+      [
+        "{python}",
+        "skills/stock-selection-agent/scripts/validate_selection_results.py",
+        "snapshot",
+        "--scores",
+        "{scores}",
+        "--candidates",
+        "{candidate_csv}",
+        "--run-id",
+        "{run_id}",
+        "--strategy-version",
+        "{strategy_version}",
+        "--selection-date",
+        "{as_of_date}",
+        "--market-env",
+        "local",
+        "--force"
+      ]
+    ]
   },
   "price_update": {
     "enabled": false,
     "commands": []
   },
   "dashboard": {
-    "enabled": false,
-    "commands": []
-  },
-  "supabase": {
     "enabled": true,
-    "plugin_handoff": false,
-    "require_write": true,
     "commands": [
       [
         "{python}",
-        "skills/stock-selection-agent/scripts/sync_supabase.py",
-        "--run-id",
-        "{run_id}",
-        "--selection-date",
-        "{as_of_date}",
-        "--scores",
-        "{scores}",
-        "--candidates",
-        "{candidate_csv}",
-        "--metadata",
-        "{fetch_meta}",
-        "--report",
-        "{report}",
-        "--operator",
-        "local_automation",
-        "--fail-on-skip"
+        "skills/stock-selection-agent/scripts/build_dashboard_data.py"
       ]
     ]
   }

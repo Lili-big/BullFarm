@@ -36,13 +36,8 @@ def load_env(local_env: Path = DEFAULT_LOCAL_ENV) -> dict[str, str]:
 class AppSettings:
     project_root: Path
     app_timezone: str
-    supabase_url: str
-    supabase_service_role_key: str
     admin_trigger_token: str
-
-    @property
-    def has_supabase_credentials(self) -> bool:
-        return bool(self.supabase_url and self.supabase_service_role_key)
+    job_store_path: Path
 
     @property
     def has_admin_token(self) -> bool:
@@ -51,10 +46,12 @@ class AppSettings:
 
 def get_settings() -> AppSettings:
     env = load_env()
+    job_store_path = Path(env.get("JOB_STORE_PATH", PROJECT_ROOT / "outputs" / "jobs" / "job_runs.json"))
+    if not job_store_path.is_absolute():
+        job_store_path = PROJECT_ROOT / job_store_path
     return AppSettings(
         project_root=PROJECT_ROOT,
         app_timezone=env.get("APP_TIMEZONE", "Asia/Shanghai"),
-        supabase_url=env.get("SUPABASE_URL", ""),
-        supabase_service_role_key=env.get("SUPABASE_SERVICE_ROLE_KEY", ""),
         admin_trigger_token=env.get("ADMIN_TRIGGER_TOKEN", ""),
+        job_store_path=job_store_path,
     )
